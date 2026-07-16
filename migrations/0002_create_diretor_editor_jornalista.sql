@@ -1,0 +1,1 @@
+-- Tabelas filhas: diretor, editor_chefe (+ editor_chefe_especialidade), jornalista.

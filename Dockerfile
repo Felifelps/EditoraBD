@@ -33,4 +33,4 @@ COPY . .
 EXPOSE 8000
 
 # Executa a aplicação usando o uv para rodar o ambiente virtual sincronizado
-CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

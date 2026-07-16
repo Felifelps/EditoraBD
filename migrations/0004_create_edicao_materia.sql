@@ -1,0 +1,1 @@
+-- Tabelas edicao (entidade fraca), materia e edicao_materia (associativa N:N).

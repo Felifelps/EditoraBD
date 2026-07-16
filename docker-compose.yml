@@ -8,6 +8,7 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
+      - /app/.venv
     environment:
       - DATABASE_URL=postgresql://root:root@db:5432/root
     depends_on:

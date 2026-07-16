@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Inicio{% endblock %}
+{% block content %}
+<h1 class="h3">Bem-vindo, {{ user.nome }}</h1>
+<p class="text-muted">Papel: {{ user.tipo }} &middot; CPF: {{ user.cpf }} &middot; Email: {{ user.email }}</p>
+{% endblock %}
