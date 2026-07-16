@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  # Serviço da API FastAPI
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=postgresql://root:root@db:5432/root
+    depends_on:
+      - db
+
+  # Serviço do Banco de Dados PostgreSQL
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: root
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+# Volume nomeado para não perder os dados do banco ao desligar o container
+volumes:
+  postgres_data:
