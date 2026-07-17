@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ funcionario.nome }}{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">{{ funcionario.nome }}</h1>
+<dl class="row">
+    <dt class="col-sm-3">CPF</dt><dd class="col-sm-9">{{ funcionario.cpf }}</dd>
+    <dt class="col-sm-3">Email</dt><dd class="col-sm-9">{{ funcionario.email }}</dd>
+    <dt class="col-sm-3">Telefone</dt><dd class="col-sm-9">{{ funcionario.telefone or "-" }}</dd>
+    <dt class="col-sm-3">Endereco</dt>
+    <dd class="col-sm-9">{{ funcionario.rua or "-" }}, {{ funcionario.numero or "-" }} - CEP {{ funcionario.cep or "-" }}</dd>
+    <dt class="col-sm-3">Nascimento</dt><dd class="col-sm-9">{{ funcionario.data_nascimento }}</dd>
+    <dt class="col-sm-3">Salario</dt><dd class="col-sm-9">{{ funcionario.salario }}</dd>
+    <dt class="col-sm-3">Tipo</dt><dd class="col-sm-9">{{ funcionario.tipo }}</dd>
+</dl>
+<a class="btn btn-primary" href="/funcionarios/{{ funcionario.cpf }}/editar">Editar</a>
+<form method="post" action="/funcionarios/{{ funcionario.cpf }}/deletar" class="d-inline"
+      onsubmit="return confirm('Excluir funcionario?')">
+    <button class="btn btn-danger" type="submit">Excluir</button>
+</form>
+<a class="btn btn-outline-secondary" href="/funcionarios">Voltar</a>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{% if funcionario %}Editar funcionario{% else %}Novo funcionario{% endif %}{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">{% if funcionario %}Editar funcionario{% else %}Novo funcionario{% endif %}</h1>
+{% if erro %}
+<div class="alert alert-danger">{{ erro }}</div>
+{% endif %}
+<form method="post" action="{{ acao }}" class="row g-3">
+    <div class="col-md-4">
+        <label class="form-label">CPF</label>
+        <input class="form-control" name="cpf" maxlength="11" required
+               value="{{ funcionario.cpf if funcionario else '' }}"
+               {% if funcionario %}readonly{% endif %}>
+    </div>
+    <div class="col-md-8">
+        <label class="form-label">Nome</label>
+        <input class="form-control" name="nome" required value="{{ funcionario.nome if funcionario else '' }}">
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Email</label>
+        <input class="form-control" type="email" name="email" required
+               value="{{ funcionario.email if funcionario else '' }}">
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Telefone</label>
+        <input class="form-control" name="telefone" value="{{ funcionario.telefone if funcionario else '' }}">
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Data de nascimento</label>
+        <input class="form-control" type="date" name="data_nascimento" required
+               value="{{ funcionario.data_nascimento if funcionario else '' }}">
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Salario</label>
+        <input class="form-control" type="number" step="0.01" name="salario" required
+               value="{{ funcionario.salario if funcionario else '' }}">
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Tipo</label>
+        <select class="form-select" name="tipo" required>
+            {% for valor, rotulo in [("diretor", "Diretor"), ("editor_chefe", "Editor-chefe"), ("jornalista", "Jornalista")] %}
+            <option value="{{ valor }}" {% if funcionario and funcionario.tipo == valor %}selected{% endif %}>{{ rotulo }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Rua</label>
+        <input class="form-control" name="rua" value="{{ funcionario.rua if funcionario else '' }}">
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Numero</label>
+        <input class="form-control" name="numero" value="{{ funcionario.numero if funcionario else '' }}">
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">CEP</label>
+        <input class="form-control" name="cep" maxlength="8" value="{{ funcionario.cep if funcionario else '' }}">
+    </div>
+    <div class="col-12">
+        <button class="btn btn-primary" type="submit">Salvar</button>
+        <a class="btn btn-outline-secondary" href="/funcionarios">Cancelar</a>
+    </div>
+</form>
+{% endblock %}
