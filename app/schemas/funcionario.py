@@ -1,16 +1,28 @@
+from datetime import date
+from decimal import Decimal
+
 from pydantic import BaseModel
 
 
-class FuncionarioAuth(BaseModel):
-    cpf: str
+class FuncionarioBase(BaseModel):
     nome: str
+    rua: str | None = None
+    cep: str | None = None
+    numero: str | None = None
+    data_nascimento: date
     email: str
-    senha_hash: str
+    telefone: str | None = None
+    salario: Decimal
     tipo: str
 
 
-class UsuarioSessao(BaseModel):
+class FuncionarioCreate(FuncionarioBase):
     cpf: str
-    nome: str
-    email: str
-    tipo: str
+
+
+class FuncionarioUpdate(FuncionarioBase):
+    pass
+
+
+class Funcionario(FuncionarioBase):
+    cpf: str
