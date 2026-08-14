@@ -31,3 +31,18 @@ CREATE TABLE IF NOT EXISTS materia (
         FOREIGN KEY (id_setor)
         REFERENCES setor(id_setor)
 );
+-- TABELA: Alocacao_Jornalista_Materia
+CREATE TABLE IF NOT EXISTS alocacao_jornalista_materia (
+    cpf_jornalista VARCHAR(11),
+    id_materia INT,
+
+    PRIMARY KEY (cpf_jornalista, id_materia),
+
+    CONSTRAINT fk_alocacao_jornalista
+        FOREIGN KEY (cpf_jornalista)
+        REFERENCES jornalista(cpf_jornalista),
+
+    CONSTRAINT fk_alocacao_materia
+        FOREIGN KEY (id_materia)
+        REFERENCES materia(id_materia)
+);
