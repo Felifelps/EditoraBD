@@ -39,12 +39,8 @@ class MateriaService:
         if not self.repo.atualizar_status(id_materia, novo_status):
             raise MateriaNaoEncontradaError(f"Matéria com ID {id_materia} não encontrada")
 
-    def alocar_editor_chefe(self, id_materia: int, editor_chefe_cpf: str) -> None:
-        if not self.repo.alocar_editor_chefe(id_materia, editor_chefe_cpf):
-            raise MateriaNaoEncontradaError(f"Matéria com ID {id_materia} não encontrada")
-
-    def vincular_jornalista(self, materia_id: int, jornalista_cpf: str, papel: str = "Autor Principal") -> None:
-        if not self.repo.vincular_jornalista(materia_id, jornalista_cpf, papel):
+    def vincular_jornalista(self, materia_id: int, jornalista_cpf: str) -> None:
+        if not self.repo.vincular_jornalista(materia_id, jornalista_cpf):
             raise MateriaNaoEncontradaError(f"Matéria com ID {materia_id} não encontrada")
 
     def desvincular_jornalista(self, materia_id: int, jornalista_cpf: str) -> None:

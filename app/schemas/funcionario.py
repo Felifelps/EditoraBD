@@ -1,7 +1,10 @@
 from datetime import date
 from decimal import Decimal
+from typing import Literal
 
 from pydantic import BaseModel
+
+Tipo = Literal["diretor", "jornalista", "editor_chefe"]
 
 
 class FuncionarioBase(BaseModel):
@@ -13,16 +16,17 @@ class FuncionarioBase(BaseModel):
     email: str
     telefone: str | None = None
     salario: Decimal
-    tipo: str
 
 
 class FuncionarioCreate(FuncionarioBase):
     cpf: str
+    tipo: Tipo
 
 
 class FuncionarioUpdate(FuncionarioBase):
-    pass
+    tipo: Tipo
 
 
 class Funcionario(FuncionarioBase):
     cpf: str
+    tipo: Tipo | None = None

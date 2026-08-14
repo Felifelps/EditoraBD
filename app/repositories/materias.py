@@ -21,7 +21,7 @@ class MateriaRepository:
         """Lista todas as matérias aplicando filtros opcionais."""
         query = """
             SELECT id_materia, titulo, subtitulo, resumo, conteudo, data,
-                   status, nome_jornal, numero_edicao, id_setor, cpf_editor_chefe
+                   status, nome_jornal, numero_edicao, id_setor
             FROM materia
             WHERE (%s::TEXT IS NULL OR titulo ILIKE '%%' || %s || '%%')
               AND (%s::INT IS NULL OR status = %s)
@@ -38,7 +38,7 @@ class MateriaRepository:
         """Busca uma matéria específica pelo seu ID."""
         query = """
             SELECT id_materia, titulo, subtitulo, resumo, conteudo, data,
-                   status, nome_jornal, numero_edicao, id_setor, cpf_editor_chefe
+                   status, nome_jornal, numero_edicao, id_setor
             FROM materia
             WHERE id_materia = %s;
         """
@@ -51,11 +51,11 @@ class MateriaRepository:
         query = """
             INSERT INTO materia (
                 titulo, subtitulo, resumo, conteudo, data,
-                status, nome_jornal, numero_edicao, id_setor, cpf_editor_chefe
+                status, nome_jornal, numero_edicao, id_setor
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id_materia, titulo, subtitulo, resumo, conteudo, data,
-                      status, nome_jornal, numero_edicao, id_setor, cpf_editor_chefe;
+                      status, nome_jornal, numero_edicao, id_setor;
         """
         with self.conn.cursor(row_factory=dict_row) as cursor:
             cursor.execute(
@@ -70,7 +70,6 @@ class MateriaRepository:
                     dados.nome_jornal,
                     dados.numero_edicao,
                     dados.id_setor,
-                    dados.cpf_editor_chefe,
                 ),
             )
             self.conn.commit()
@@ -101,7 +100,7 @@ class MateriaRepository:
             SET {", ".join(campos)}
             WHERE id_materia = %s
             RETURNING id_materia, titulo, subtitulo, resumo, conteudo, data,
-                      status, nome_jornal, numero_edicao, id_setor, cpf_editor_chefe;
+                      status, nome_jornal, numero_edicao, id_setor;
         """
 
         with self.conn.cursor(row_factory=dict_row) as cursor:
@@ -118,37 +117,18 @@ class MateriaRepository:
             self.conn.commit()
             return cursor.rowcount > 0
 
-    def alocar_editor_chefe(
-        self,
-        id_materia: int,
-        editor_chefe_cpf: str
-    ) -> bool:
-        """Aloca ou altera o editor chefe de uma matéria."""
-        query = "UPDATE materia SET cpf_editor_chefe = %s WHERE id_materia = %s;"
-
-        with self.conn.cursor() as cursor:
-            cursor.execute(query, (editor_chefe_cpf, id_materia))
-            self.conn.commit()
-            return cursor.rowcount > 0
-
-    def vincular_jornalista(
-        self,
-        materia_id: int,
-        jornalista_cpf: str,
-        papel: str = "Autor Principal"
-    ) -> bool:
+    def vincular_jornalista(self, materia_id: int, jornalista_cpf: str) -> bool:
         """Vincula um jornalista a uma matéria na tabela associativa."""
         query = """
-            INSERT INTO materia_jornalista (materia_id, jornalista_cpf, papel)
-            VALUES (%s, %s, %s)
-            ON CONFLICT (materia_id, jornalista_cpf)
-            DO UPDATE SET papel = EXCLUDED.papel;
+            INSERT INTO alocacao_jornalista_materia (id_materia, cpf_jornalista)
+            VALUES (%s, %s)
+            ON CONFLICT (cpf_jornalista, id_materia) DO NOTHING;
         """
 
         with self.conn.cursor() as cursor:
             cursor.execute(
                 query,
-                (materia_id, jornalista_cpf, papel)
+                (materia_id, jornalista_cpf)
             )
             self.conn.commit()
             return True
@@ -160,8 +140,8 @@ class MateriaRepository:
     ) -> bool:
         """Remove o vínculo de um jornalista com uma matéria."""
         query = """
-            DELETE FROM materia_jornalista
-            WHERE materia_id = %s AND jornalista_cpf = %s;
+            DELETE FROM alocacao_jornalista_materia
+            WHERE id_materia = %s AND cpf_jornalista = %s;
         """
 
         with self.conn.cursor() as cursor:
