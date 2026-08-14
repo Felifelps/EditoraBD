@@ -1,0 +1,73 @@
+-- ============================================================
+-- POVOAMENTO: EDICAO
+-- Quantidade: 60 tuplas
+-- ============================================================
+
+INSERT INTO edicao
+    (nome_jornal, numero_edicao, data)
+VALUES
+    ('Jornal Pernambuco', 1, '2025-01-05'),
+    ('Jornal Pernambuco', 2, '2025-01-12'),
+    ('Jornal Pernambuco', 3, '2025-01-19'),
+    ('Jornal Pernambuco', 4, '2025-01-26'),
+    ('Jornal Pernambuco', 5, '2025-02-02'),
+    ('Jornal Pernambuco', 6, '2025-02-09'),
+    ('Jornal Pernambuco', 7, '2025-02-16'),
+    ('Jornal Pernambuco', 8, '2025-02-23'),
+    ('Jornal Pernambuco', 9, '2025-03-02'),
+    ('Jornal Pernambuco', 10, '2025-03-09'),
+
+    ('Diario do Recife', 1, '2025-01-06'),
+    ('Diario do Recife', 2, '2025-01-13'),
+    ('Diario do Recife', 3, '2025-01-20'),
+    ('Diario do Recife', 4, '2025-01-27'),
+    ('Diario do Recife', 5, '2025-02-03'),
+    ('Diario do Recife', 6, '2025-02-10'),
+    ('Diario do Recife', 7, '2025-02-17'),
+    ('Diario do Recife', 8, '2025-02-24'),
+    ('Diario do Recife', 9, '2025-03-03'),
+    ('Diario do Recife', 10, '2025-03-10'),
+
+    ('Gazeta Pernambucana', 1, '2025-01-07'),
+    ('Gazeta Pernambucana', 2, '2025-01-14'),
+    ('Gazeta Pernambucana', 3, '2025-01-21'),
+    ('Gazeta Pernambucana', 4, '2025-01-28'),
+    ('Gazeta Pernambucana', 5, '2025-02-04'),
+    ('Gazeta Pernambucana', 6, '2025-02-11'),
+    ('Gazeta Pernambucana', 7, '2025-02-18'),
+    ('Gazeta Pernambucana', 8, '2025-02-25'),
+    ('Gazeta Pernambucana', 9, '2025-03-04'),
+    ('Gazeta Pernambucana', 10, '2025-03-11'),
+
+    ('Folha Regional', 1, '2025-01-08'),
+    ('Folha Regional', 2, '2025-01-15'),
+    ('Folha Regional', 3, '2025-01-22'),
+    ('Folha Regional', 4, '2025-01-29'),
+    ('Folha Regional', 5, '2025-02-05'),
+    ('Folha Regional', 6, '2025-02-12'),
+    ('Folha Regional', 7, '2025-02-19'),
+    ('Folha Regional', 8, '2025-02-26'),
+    ('Folha Regional', 9, '2025-03-05'),
+    ('Folha Regional', 10, '2025-03-12'),
+
+    ('Noticias do Nordeste', 1, '2025-01-09'),
+    ('Noticias do Nordeste', 2, '2025-01-16'),
+    ('Noticias do Nordeste', 3, '2025-01-23'),
+    ('Noticias do Nordeste', 4, '2025-01-30'),
+    ('Noticias do Nordeste', 5, '2025-02-06'),
+    ('Noticias do Nordeste', 6, '2025-02-13'),
+    ('Noticias do Nordeste', 7, '2025-02-20'),
+    ('Noticias do Nordeste', 8, '2025-02-27'),
+    ('Noticias do Nordeste', 9, '2025-03-06'),
+    ('Noticias do Nordeste', 10, '2025-03-13'),
+
+    ('Jornal da Cidade', 1, '2025-01-10'),
+    ('Jornal da Cidade', 2, '2025-01-17'),
+    ('Jornal da Cidade', 3, '2025-01-24'),
+    ('Jornal da Cidade', 4, '2025-01-31'),
+    ('Jornal da Cidade', 5, '2025-02-07'),
+    ('Jornal da Cidade', 6, '2025-02-14'),
+    ('Jornal da Cidade', 7, '2025-02-21'),
+    ('Jornal da Cidade', 8, '2025-02-28'),
+    ('Jornal da Cidade', 9, '2025-03-07'),
+    ('Jornal da Cidade', 10, '2025-03-14');
