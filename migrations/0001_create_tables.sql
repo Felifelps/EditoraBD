@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS setor (
 -- MATERIA
 CREATE TABLE IF NOT EXISTS materia (
     id_materia      SERIAL PRIMARY KEY,
-    titulo          VARCHAR(200) NOT NULL,
+    titulo          VARCHAR(200),
     subtitulo       VARCHAR(200),
     resumo          TEXT,
     conteudo        TEXT,
