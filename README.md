@@ -10,9 +10,7 @@ Projeto Banco de Dados — CRUD de gestão editorial (sem login: acesso direto �
 
 ## Rodando o projeto
 
-Pré-requisito: Docker e Docker Compose instalados. Não é necessário instalar Python,
-uv nem rodar `uv sync` manualmente — tudo isso acontece dentro da imagem, no build do
-container (`Dockerfile` roda `uv sync --frozen --no-cache`).
+Pré-requisito: Docker e Docker Compose instalados.
 
 ```bash
 docker compose up -d --build
@@ -24,8 +22,7 @@ Isso sobe dois serviços definidos no `docker-compose.yml`:
 - `web` — a aplicação FastAPI, porta `8000`, já configurada com a `DATABASE_URL` do
   `db` diretamente no `docker-compose.yml` (sem precisar de `.env`).
 
-Ao iniciar, a aplicação já roda as migrações pendentes automaticamente contra o `db`
-(schema + povoamento — ver seção [Povoamento do banco](#povoamento-do-banco) abaixo).
+Ao iniciar, a aplicação já roda as migrações pendentes automaticamente contra o `db`.
 
 Acesse em http://localhost:8000.
 
@@ -43,7 +40,7 @@ docker compose down -v
 
 ## Povoamento do banco
 
-O povoamento é feito **via script DML (`INSERT`)**, não por consumo de API externa. Não
+O povoamento é feito **via script DML (`INSERT`)**. Não
 existe um passo manual separado para popular o banco: schema (DDL) e dados (DML) são
 tratados como o mesmo mecanismo de migração.
 
@@ -77,24 +74,31 @@ próximo start da app.
 
 ```
 app/
-  main.py          ponto de entrada: cria a FastAPI, roda as migrações no startup
-                    (lifespan) e registra os routers
-  config.py         leitura de variáveis de ambiente (ex.: DATABASE_URL) via pydantic-settings
-  templating.py      configuração do Jinja2 (motor de templates)
-  routers/           rotas HTTP — recebem a requisição, chamam o service e devolvem a
-                      resposta (JSON ou HTML). Ex.: app/routers/funcionarios.py
-  services/           regra de negócio: validações (ex.: CPF duplicado) e orquestração
-                      entre repositories, sem falar SQL diretamente
-  repositories/        acesso ao banco: todo o SQL cru (psycopg) fica aqui, uma classe
-                      *Repository por entidade
-  schemas/             modelos Pydantic usados como contrato de entrada/saída da API
-                      e para popular os templates
-  exceptions/           exceções de domínio (ex.: FuncionarioNaoEncontradoError),
-                      traduzidas em respostas HTTP pelos routers
-  db/                   pool de conexão (pool.py), dependency do FastAPI para obter uma
-                      conexão por requisição (dependencies.py) e o runner de migrações
-                      (migrate.py)
-  templates/             páginas Jinja2 (HTML), uma pasta por entidade
-  static/                 arquivos estáticos (CSS/JS) servidos em /static
-migrations/          scripts SQL (DDL + DML), aplicados em ordem no startup da app
+  main.py
+  config.py
+  templating.py
+  routers/
+  services/
+  repositories/
+  schemas/
+  exceptions/
+  db/
+  templates/
+  static/
+migrations/
 ```
+
+| Caminho | Responsabilidade |
+|---|---|
+| `app/main.py` | Ponto de entrada: cria a FastAPI, roda as migrações no startup (`lifespan`) e registra os routers |
+| `app/config.py` | Leitura de variáveis de ambiente (ex.: `DATABASE_URL`) via pydantic-settings |
+| `app/templating.py` | Configuração do Jinja2 (motor de templates) |
+| `app/routers/` | Rotas HTTP — recebem a requisição, chamam o service e devolvem a resposta (JSON ou HTML). Ex.: `app/routers/funcionarios.py` |
+| `app/services/` | Regra de negócio: validações (ex.: CPF duplicado) e orquestração entre repositories, sem falar SQL diretamente |
+| `app/repositories/` | Acesso ao banco: todo o SQL cru (psycopg) fica aqui, uma classe `*Repository` por entidade |
+| `app/schemas/` | Modelos Pydantic usados como contrato de entrada/saída da API e para popular os templates |
+| `app/exceptions/` | Exceções de domínio (ex.: `FuncionarioNaoEncontradoError`), traduzidas em respostas HTTP pelos routers |
+| `app/db/` | Pool de conexão (`pool.py`), dependency do FastAPI para obter uma conexão por requisição (`dependencies.py`) e o runner de migrações (`migrate.py`) |
+| `app/templates/` | Páginas Jinja2 (HTML), uma pasta por entidade |
+| `app/static/` | Arquivos estáticos (CSS/JS) servidos em `/static` |
+| `migrations/` | Scripts SQL (DDL + DML), aplicados em ordem no startup da app |
