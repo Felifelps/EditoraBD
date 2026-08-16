@@ -2,6 +2,12 @@
 
 Projeto Banco de Dados — CRUD de gestão editorial (sem login: acesso direto às páginas).
 
+## Integrantes
+* **Joran Vinicius Silveira Lage**
+* **Matheus Windson Libório Araújo**
+* **Felipe dos Santos Ferreira**
+* **Leonardo Sabino Pereira**
+  
 ## Stack
 
 - FastAPI + Jinja2 (templates renderizados no servidor)
