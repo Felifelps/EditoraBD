@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from app.config import get_settings
 from app.db.migrate import run_migrations
 from app.db.pool import build_pool
-from app.routers import funcionarios
+from app.routers import edicoes, funcionarios, jornais, setores
 from app.templating import templates
 
 
@@ -25,6 +25,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=Path(__file__).resolve().parent / "static"), name="static")
 app.include_router(funcionarios.router)
+app.include_router(jornais.router)
+app.include_router(edicoes.router)
+app.include_router(setores.router)
 
 
 @app.get("/")
