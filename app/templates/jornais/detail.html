@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ jornal.nome_jornal }}{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">{{ jornal.nome_jornal }}</h1>
+<dl class="row">
+    <dt class="col-sm-3">Diretor</dt><dd class="col-sm-9">{{ jornal.nome_diretor or "-" }}</dd>
+</dl>
+<a class="btn btn-primary" href="/jornais/{{ jornal.nome_jornal }}/editar">Editar</a>
+<form method="post" action="/jornais/{{ jornal.nome_jornal }}/deletar" class="d-inline"
+      onsubmit="return confirm('Excluir jornal?')">
+    <button class="btn btn-danger" type="submit">Excluir</button>
+</form>
+<a class="btn btn-outline-secondary" href="/jornais">Voltar</a>
+{% endblock %}
