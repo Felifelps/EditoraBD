@@ -171,6 +171,26 @@ class MateriaRepository:
             )
             self.conn.commit()
             return cursor.rowcount > 0
+        
+    def listar_jornalistas(
+        self,
+        materia_id: int
+    ) -> List[Dict[str, Any]]:
+        """Lista os jornalistas vinculados a uma matéria."""
+        query = """
+            SELECT
+                cpf_jornalista
+            FROM alocacao_jornalista_materia
+            WHERE id_materia = %s
+            ORDER BY cpf_jornalista;
+        """
+
+        with self.conn.cursor(row_factory=dict_row) as cursor:
+            cursor.execute(
+                query,
+                (materia_id,)
+            )
+            return cursor.fetchall()
 
     def deletar(self, id_materia: int) -> bool:
         """Remove uma matéria do banco de dados pelo ID."""

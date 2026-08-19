@@ -1,0 +1,473 @@
+/* =========================================================
+   CONFIGURAÇÕES GERAIS
+   ========================================================= */
+
+:root {
+    --cor-primaria: #0d6efd;
+    --cor-primaria-hover: #0b5ed7;
+    --cor-sucesso: #198754;
+    --cor-perigo: #dc3545;
+    --cor-aviso: #ffc107;
+
+    --cor-texto: #212529;
+    --cor-texto-secundario: #6c757d;
+
+    --cor-fundo: #f8f9fa;
+    --cor-borda: #dee2e6;
+
+    --raio-padrao: 0.5rem;
+}
+
+
+/* =========================================================
+   DOCUMENTO
+   ========================================================= */
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    min-height: 100vh;
+    color: var(--cor-texto);
+    background-color: var(--cor-fundo);
+}
+
+
+/* =========================================================
+   NAVEGAÇÃO
+   ========================================================= */
+
+.navbar-brand {
+    letter-spacing: 0.2px;
+}
+
+.navbar .nav-link {
+    transition:
+        color 0.2s ease-in-out,
+        opacity 0.2s ease-in-out;
+}
+
+.navbar .nav-link:hover {
+    opacity: 0.85;
+}
+
+
+/* =========================================================
+   CONTEÚDO
+   ========================================================= */
+
+main {
+    min-height: calc(100vh - 56px);
+}
+
+section {
+    scroll-margin-top: 80px;
+}
+
+
+/* =========================================================
+   CARDS
+   ========================================================= */
+
+.card {
+    border-radius: var(--raio-padrao);
+}
+
+.card-header {
+    background-color: #fff;
+}
+
+
+/* =========================================================
+   TIPOGRAFIA
+   ========================================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--cor-texto);
+}
+
+.text-muted {
+    color: var(--cor-texto-secundario) !important;
+}
+
+
+/* =========================================================
+   FORMULÁRIOS
+   ========================================================= */
+
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.4rem;
+}
+
+.form-control,
+.form-select {
+    border-color: var(--cor-borda);
+    border-radius: 0.4rem;
+
+    transition:
+        border-color 0.15s ease-in-out,
+        box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--cor-primaria);
+
+    box-shadow:
+        0 0 0 0.2rem
+        rgba(13, 110, 253, 0.15);
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+}
+
+input[type="date"] {
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   BOTÕES
+   ========================================================= */
+
+.btn {
+    border-radius: 0.4rem;
+    font-weight: 500;
+
+    transition:
+        background-color 0.15s ease-in-out,
+        border-color 0.15s ease-in-out,
+        box-shadow 0.15s ease-in-out,
+        transform 0.1s ease-in-out;
+}
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+.btn-primary:hover {
+    background-color: var(--cor-primaria-hover);
+    border-color: var(--cor-primaria-hover);
+}
+
+
+/* =========================================================
+   TABELAS
+   ========================================================= */
+
+.table {
+    margin-bottom: 0;
+}
+
+.table thead th {
+    white-space: nowrap;
+
+    font-size: 0.875rem;
+    font-weight: 600;
+
+    color: #495057;
+
+    border-bottom-width: 1px;
+}
+
+.table tbody td {
+    vertical-align: middle;
+}
+
+.table tbody tr {
+    transition:
+        background-color 0.15s ease-in-out;
+}
+
+.table tbody tr:hover {
+    background-color:
+        rgba(13, 110, 253, 0.03);
+}
+
+.table td:first-child,
+.table th:first-child {
+    width: 80px;
+}
+
+.table td:last-child,
+.table th:last-child {
+    min-width: 150px;
+}
+
+
+/* =========================================================
+   AÇÕES DA MATÉRIA
+   ========================================================= */
+
+.acoes-materia {
+    display: flex;
+
+    justify-content: flex-end;
+    align-items: center;
+
+    gap: 0.4rem;
+
+    flex-wrap: wrap;
+}
+
+.acoes-materia .btn {
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+.status-badge {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-width: 110px;
+
+    padding:
+        0.35rem 0.65rem;
+
+    border-radius: 50rem;
+
+    font-size: 0.75rem;
+    font-weight: 600;
+
+    line-height: 1.2;
+}
+
+.status-em-andamento {
+    color: #664d03;
+
+    background-color: #fff3cd;
+
+    border:
+        1px solid #ffecb5;
+}
+
+.status-aprovada {
+    color: #0f5132;
+
+    background-color: #d1e7dd;
+
+    border:
+        1px solid #badbcc;
+}
+
+.status-reprovada {
+    color: #842029;
+
+    background-color: #f8d7da;
+
+    border:
+        1px solid #f5c2c7;
+}
+
+.status-desconhecido {
+    color: #41464b;
+
+    background-color: #e2e3e5;
+
+    border:
+        1px solid #d3d6d8;
+}
+
+
+/* =========================================================
+   ALERTAS
+   ========================================================= */
+
+#alertContainer {
+    min-height: 0;
+}
+
+#alertContainer .alert {
+    margin-bottom: 1rem;
+
+    border-radius:
+        var(--raio-padrao);
+}
+
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+#loadingIndicator {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 0.5rem;
+}
+
+.loading-spinner {
+    display: inline-block;
+
+    width: 1rem;
+    height: 1rem;
+
+    border:
+        0.15rem solid #dee2e6;
+
+    border-top-color:
+        var(--cor-primaria);
+
+    border-radius: 50%;
+
+    animation:
+        spinner-rotacao 0.7s linear infinite;
+}
+
+@keyframes spinner-rotacao {
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* =========================================================
+   ESTADO VAZIO
+   ========================================================= */
+
+#emptyState td {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+
+/* =========================================================
+   MODAIS
+   ========================================================= */
+
+.modal-content {
+    border: 0;
+
+    border-radius:
+        0.65rem;
+
+    box-shadow:
+        0 1rem 3rem
+        rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    border-bottom-color:
+        var(--cor-borda);
+}
+
+.modal-footer {
+    border-top-color:
+        var(--cor-borda);
+}
+
+.modal-title {
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   ACESSIBILIDADE
+   ========================================================= */
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline:
+        3px solid
+        rgba(13, 110, 253, 0.35);
+
+    outline-offset: 2px;
+}
+
+
+/* =========================================================
+   RESPONSIVIDADE
+   ========================================================= */
+
+@media (max-width: 991.98px) {
+
+    .table {
+        min-width: 900px;
+    }
+
+    .table-responsive {
+        border:
+            1px solid
+            var(--cor-borda);
+
+        border-radius:
+            var(--raio-padrao);
+    }
+}
+
+
+@media (max-width: 767.98px) {
+
+    main {
+        padding-left:
+            0.75rem !important;
+
+        padding-right:
+            0.75rem !important;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .acoes-materia {
+        justify-content: flex-start;
+    }
+
+    .status-badge {
+        min-width: 100px;
+    }
+}
+
+
+@media (max-width: 575.98px) {
+
+    .navbar-brand {
+        font-size: 1rem;
+    }
+
+    h1.h3 {
+        font-size: 1.5rem;
+    }
+
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+}
+
+
+/* =========================================================
+   UTILITÁRIOS
+   ========================================================= */
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.text-break {
+    overflow-wrap: anywhere;
+}
