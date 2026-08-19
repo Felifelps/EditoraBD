@@ -1,1 +1,0 @@
--- Tabelas setor e jornal.

@@ -2,21 +2,32 @@
 
 Projeto Banco de Dados — CRUD de gestão editorial (sem login: acesso direto às páginas).
 
+## Integrantes
+* **Joran Vinicius Silveira Lage**
+* **Matheus Windson Libório Araújo**
+* **Felipe dos Santos Ferreira**
+* **Leonardo Sabino Pereira**
+  
 ## Stack
 
 - FastAPI + Jinja2 (templates renderizados no servidor)
-- PostgreSQL via psycopg (pool de conexões)
-- Migrações SQL simples, aplicadas automaticamente no início da aplicação
+- PostgreSQL 15, acessado via **psycopg 3** puro (SQL cru + pool de conexões) — **sem ORM**, ou seja, sem SQLAlchemy nem Django ORM. Todo o acesso a dados fica nas classes `*Repository` em `app/repositories/`.
+- Migrações SQL simples (`migrations/*.sql`), aplicadas automaticamente no início da aplicação
 
-## Rodando com Docker (recomendado)
+## Rodando o projeto
 
 Pré-requisito: Docker e Docker Compose instalados.
 
 ```bash
-docker compose up
+docker compose up -d --build
 ```
 
-Isso sobe dois serviços: `web` (a aplicação, porta 8000) e `db` (Postgres, porta 5432).
+Isso sobe dois serviços definidos no `docker-compose.yml`:
+
+- `db` — Postgres 15, porta `5432`, usuário `root`, senha `root`, banco `root`.
+- `web` — a aplicação FastAPI, porta `8000`, já configurada com a `DATABASE_URL` do
+  `db` diretamente no `docker-compose.yml` (sem precisar de `.env`).
+
 Ao iniciar, a aplicação já roda as migrações pendentes automaticamente contra o `db`.
 
 Acesse em http://localhost:8000.
@@ -33,66 +44,67 @@ Para apagar também os dados do banco (recomeça do zero):
 docker compose down -v
 ```
 
-## Rodando localmente (sem Docker)
+## Povoamento do banco
 
-Pré-requisitos: Python 3.12+, [uv](https://docs.astral.sh/uv/) e um Postgres acessível.
+O povoamento é feito **via script DML (`INSERT`)**. Não
+existe um passo manual separado para popular o banco: schema (DDL) e dados (DML) são
+tratados como o mesmo mecanismo de migração.
 
-1. Suba um Postgres (pode usar só o serviço `db` do compose):
+- `migrations/0001_create_tables.sql` — DDL: cria as 10 tabelas do esquema lógico
+  (`funcionario`, `diretor`, `jornalista`, `editor_chefe`, `editor_especialidade`,
+  `jornal`, `edicao`, `setor`, `materia`, `alocacao_jornalista_materia`), com PKs, FKs
+  e constraints.
+- `migrations/0002_database_seed.sql` — DML: popula as 10 tabelas, respeitando a ordem
+  de dependência das chaves estrangeiras (`funcionario` → subtipos → `jornal` →
+  `edicao`/`setor` → `materia` → `alocacao_jornalista_materia`), com no mínimo 50
+  tuplas nas tabelas principais (ex.: `funcionario`, `edicao`, `materia`) e 15 nas
+  secundárias (ex.: `diretor`, `jornalista`, `editor_chefe`, `jornal`, `setor`,
+  `editor_especialidade`, `alocacao_jornalista_materia`).
 
-   ```bash
-   docker compose up db
-   ```
+Esses dois arquivos ficam em `migrations/*.sql` e são aplicados **automaticamente, em
+ordem, toda vez que a aplicação sobe** — ver `app/db/migrate.py`, chamado no `lifespan`
+de `app/main.py`. Cada arquivo já aplicado é registrado numa única tabela de controle,
+`schema_migrations` (criada pelo próprio `migrate.py` se não existir), guardando o nome
+do arquivo e o timestamp de quando rodou. Antes de aplicar cada `.sql`, o runner checa
+se o nome já está nessa tabela; se estiver, pula — então subir a aplicação de novo
+(`docker compose up -d --build`) nunca reaplica nem duplica o que já rodou.
 
-2. Instale as dependências:
+Ou seja: basta iniciar a app que o schema e os dados já ficam em dia, sem comando
+manual de migração.
 
-   ```bash
-   uv sync
-   ```
-
-3. (Opcional) configure a conexão criando um `.env` na raiz — por padrão a app usa
-   `postgresql://root:root@localhost:5432/root`, que já bate com o `db` do compose:
-
-   ```
-   DATABASE_URL=postgresql://usuario:senha@localhost:5432/banco
-   ```
-
-4. Rode a aplicação:
-
-   ```bash
-   uv run uvicorn app.main:app --reload
-   ```
-
-Acesse em http://localhost:8000.
-
-## Migrações
-
-As migrações ficam em `migrations/*.sql` e são aplicadas **automaticamente, em ordem,
-toda vez que a aplicação sobe** (ver `app/db/migrate.py`, chamado no `lifespan` de
-`app/main.py`). Cada arquivo já aplicado é registrado na tabela `schema_migrations`,
-então rodar a app de novo não reaplica o que já rodou.
-
-Ou seja: não existe um comando manual separado para migrar — basta iniciar a app
-(`docker compose up` ou `uv run uvicorn app.main:app`) que o schema já fica em dia.
-
-Para adicionar uma nova migração, crie um arquivo novo em `migrations/` seguindo o
-padrão de numeração (`0006_algo.sql`) — ele será aplicado no próximo start da app.
+Para adicionar uma nova migração (schema ou dados), crie um arquivo novo em
+`migrations/` seguindo o padrão de numeração (`0003_algo.sql`) — ele será aplicado no
+próximo start da app.
 
 ## Estrutura
 
 ```
 app/
-  routers/        rotas HTTP (ex.: app/routers/funcionarios.py)
-  repositories/    acesso ao banco (SQL)
-  schemas/         modelos Pydantic
-  templates/       páginas Jinja2 (HTML)
-  db/              pool de conexão e runner de migrações
-migrations/        scripts SQL, aplicados em ordem
+  main.py
+  config.py
+  templating.py
+  routers/
+  services/
+  repositories/
+  schemas/
+  exceptions/
+  db/
+  templates/
+  static/
+migrations/
 ```
 
-## Funcionalidade de exemplo: Funcionários
-
-- `GET /funcionarios` — lista os funcionários cadastrados
-- `GET /funcionarios/novo` — formulário de cadastro
-- `POST /funcionarios/novo` — cria um novo funcionário
-
-Use esse CRUD como modelo para os demais (setores, jornais, matérias, edições).
+| Caminho | Responsabilidade |
+|---|---|
+| `app/main.py` | Ponto de entrada: cria a FastAPI, roda as migrações no startup (`lifespan`) e registra os routers |
+| `app/config.py` | Leitura de variáveis de ambiente (ex.: `DATABASE_URL`) via pydantic-settings |
+| `app/templating.py` | Configuração do Jinja2 (motor de templates) |
+| `app/routers/` | Rotas HTTP — recebem a requisição, chamam o service e devolvem a resposta (JSON ou HTML). Ex.: `app/routers/funcionarios.py` |
+| `app/services/` | Regra de negócio: validações (ex.: CPF duplicado) e orquestração entre repositories, sem falar SQL diretamente |
+| `app/repositories/` | Acesso ao banco: todo o SQL cru (psycopg) fica aqui, uma classe `*Repository` por entidade |
+| `app/schemas/` | Modelos Pydantic usados como contrato de entrada/saída da API e para popular os templates |
+| `app/exceptions/` | Exceções de domínio (ex.: `FuncionarioNaoEncontradoError`), traduzidas em respostas HTTP pelos routers |
+| `app/db/` | Pool de conexão (`pool.py`), dependency do FastAPI para obter uma conexão por requisição (`dependencies.py`) e o runner de migrações (`migrate.py`) |
+| `app/templates/` | Páginas Jinja2 (HTML), uma pasta por entidade |
+| `app/static/` | Arquivos estáticos (CSS/JS) servidos em `/static` |
+| `migrations/` | Scripts SQL (DDL + DML), aplicados em ordem no startup da app |

@@ -12,7 +12,6 @@ class MateriaBase(BaseModel):
     nome_jornal: str | None = None
     numero_edicao: int | None = None
     id_setor: int | None = None
-    cpf_editor_chefe: str | None = None
 
 
 class MateriaCriar(MateriaBase):
@@ -29,7 +28,6 @@ class MateriaAtualizar(BaseModel):
     nome_jornal: str | None = None
     numero_edicao: int | None = None
     id_setor: int | None = None
-    cpf_editor_chefe: str | None = None
 
 
 class Materia(MateriaBase):
