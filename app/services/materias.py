@@ -4,22 +4,14 @@ from fastapi import Depends
 from psycopg import Connection
 
 from app.db.dependencies import get_conn
-from app.exceptions.materias import (
-    MateriaNaoEncontradaError,
-)
+from app.exceptions.materias import MateriaNaoEncontradaError
 from app.repositories.materias import MateriaRepository
-from app.schemas.materias import (
-    MateriaAtualizar,
-    MateriaCriar,
-)
+from app.schemas.materias import MateriaAtualizar, MateriaCriar
 
 
 class MateriaService:
 
-    def __init__(
-        self,
-        repo: MateriaRepository,
-    ):
+    def __init__(self, repo: MateriaRepository):
         self.repo = repo
 
     def listar(
@@ -28,7 +20,6 @@ class MateriaService:
         status: int | None = None,
         setor_id: int | None = None,
     ) -> list[dict[str, Any]]:
-
         return self.repo.listar_todas(
             search=search,
             status=status,
@@ -39,10 +30,7 @@ class MateriaService:
         self,
         id_materia: int,
     ) -> dict[str, Any]:
-
-        materia = self.repo.buscar_por_id(
-            id_materia
-        )
+        materia = self.repo.buscar_por_id(id_materia)
 
         if materia is None:
             raise MateriaNaoEncontradaError(
@@ -55,7 +43,6 @@ class MateriaService:
         self,
         dados: MateriaCriar,
     ) -> dict[str, Any]:
-
         return self.repo.criar(dados)
 
     def atualizar(
@@ -63,7 +50,6 @@ class MateriaService:
         id_materia: int,
         dados: MateriaAtualizar,
     ) -> dict[str, Any]:
-
         materia = self.repo.atualizar(
             id_materia,
             dados,
@@ -81,24 +67,9 @@ class MateriaService:
         id_materia: int,
         novo_status: int,
     ) -> None:
-
         if not self.repo.atualizar_status(
             id_materia,
             novo_status,
-        ):
-            raise MateriaNaoEncontradaError(
-                f"Matéria com ID {id_materia} não encontrada"
-            )
-
-    def alocar_editor_chefe(
-        self,
-        id_materia: int,
-        editor_chefe_cpf: str,
-    ) -> None:
-
-        if not self.repo.alocar_editor_chefe(
-            id_materia,
-            editor_chefe_cpf,
         ):
             raise MateriaNaoEncontradaError(
                 f"Matéria com ID {id_materia} não encontrada"
@@ -108,7 +79,6 @@ class MateriaService:
         self,
         materia_id: int,
     ) -> list[dict[str, Any]]:
-
         return self.repo.listar_jornalistas(
             materia_id
         )
@@ -118,7 +88,6 @@ class MateriaService:
         materia_id: int,
         jornalista_cpf: str,
     ) -> None:
-
         if not self.repo.vincular_jornalista(
             materia_id,
             jornalista_cpf,
@@ -132,7 +101,6 @@ class MateriaService:
         materia_id: int,
         jornalista_cpf: str,
     ) -> None:
-
         self.repo.desvincular_jornalista(
             materia_id,
             jornalista_cpf,
@@ -142,7 +110,6 @@ class MateriaService:
         self,
         id_materia: int,
     ) -> None:
-
         if not self.repo.deletar(
             id_materia
         ):
@@ -154,7 +121,6 @@ class MateriaService:
 def get_materia_service(
     conn: Connection = Depends(get_conn),
 ) -> MateriaService:
-
     return MateriaService(
         MateriaRepository(conn)
     )
