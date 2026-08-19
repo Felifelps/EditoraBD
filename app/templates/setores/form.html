@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{% if setor %}Editar setor{% else %}Novo setor{% endif %}{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">{% if setor %}Editar setor{% else %}Novo setor{% endif %}</h1>
+{% if erro %}
+<div class="alert alert-danger">{{ erro }}</div>
+{% endif %}
+<form method="post" action="{{ acao }}" class="row g-3">
+    <div class="col-md-2">
+        <label class="form-label">ID</label>
+        <input class="form-control" type="number" name="id_setor" required
+               value="{{ setor.id_setor if setor else '' }}"
+               {% if setor %}readonly{% endif %}>
+    </div>
+    <div class="col-md-5">
+        <label class="form-label">Nome</label>
+        <input class="form-control" name="nome" required value="{{ setor.nome if setor else '' }}">
+    </div>
+    <div class="col-md-5">
+        <label class="form-label">Editor-chefe</label>
+        <select class="form-select" name="cpf_editor_chefe">
+            <option value="">-- nenhum --</option>
+            {% for e in editores %}
+            <option value="{{ e.cpf }}" {% if setor and setor.cpf_editor_chefe == e.cpf %}selected{% endif %}>{{ e.nome }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-12">
+        <label class="form-label">Descricao</label>
+        <textarea class="form-control" name="descricao" rows="3">{{ setor.descricao if setor else '' }}</textarea>
+    </div>
+    <div class="col-12">
+        <button class="btn btn-primary" type="submit">Salvar</button>
+        <a class="btn btn-outline-secondary" href="/setores">Cancelar</a>
+    </div>
+</form>
+{% endblock %}
