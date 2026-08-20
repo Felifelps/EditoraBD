@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ setor.nome }}{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">{{ setor.nome }}</h1>
+<dl class="row">
+    <dt class="col-sm-3">ID</dt><dd class="col-sm-9">{{ setor.id_setor }}</dd>
+    <dt class="col-sm-3">Descricao</dt><dd class="col-sm-9">{{ setor.descricao or "-" }}</dd>
+    <dt class="col-sm-3">Editor-chefe</dt><dd class="col-sm-9">{{ setor.nome_editor_chefe or "-" }}</dd>
+</dl>
+<a class="btn btn-primary" href="/setores/{{ setor.id_setor }}/editar">Editar</a>
+<form method="post" action="/setores/{{ setor.id_setor }}/deletar" class="d-inline"
+      onsubmit="return confirm('Excluir setor?')">
+    <button class="btn btn-danger" type="submit">Excluir</button>
+</form>
+<a class="btn btn-outline-secondary" href="/setores">Voltar</a>
+{% endblock %}

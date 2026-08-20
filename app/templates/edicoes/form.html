@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{% if edicao %}Editar edicao{% else %}Nova edicao{% endif %}{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">{% if edicao %}Editar edicao{% else %}Nova edicao{% endif %}</h1>
+{% if erro %}
+<div class="alert alert-danger">{{ erro }}</div>
+{% endif %}
+<form method="post" action="{{ acao }}" class="row g-3">
+    <div class="col-md-6">
+        <label class="form-label">Jornal</label>
+        {% if edicao %}
+        <input class="form-control" value="{{ edicao.nome_jornal }}" readonly>
+        {% else %}
+        <select class="form-select" name="nome_jornal" required>
+            {% for nome in jornais %}
+            <option value="{{ nome }}">{{ nome }}</option>
+            {% endfor %}
+        </select>
+        {% endif %}
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Numero</label>
+        <input class="form-control" type="number" name="numero_edicao" required
+               value="{{ edicao.numero_edicao if edicao else '' }}"
+               {% if edicao %}readonly{% endif %}>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Data</label>
+        <input class="form-control" type="date" name="data" value="{{ edicao.data if edicao else '' }}">
+    </div>
+    <div class="col-12">
+        <button class="btn btn-primary" type="submit">Salvar</button>
+        <a class="btn btn-outline-secondary" href="/edicoes">Cancelar</a>
+    </div>
+</form>
+{% endblock %}
