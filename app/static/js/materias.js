@@ -1,13 +1,6 @@
 "use strict";
 
-/*
- * ============================================================
- * CONFIGURAÇÃO
- * ============================================================
- */
-
 const API_MATERIAS = "/materias/";
-
 
 const STATUS = {
     EM_ANDAMENTO: 0,
@@ -15,19 +8,27 @@ const STATUS = {
     REPROVADA: 2
 };
 
-
 const STATUS_LABELS = {
     0: "Em andamento",
     1: "Aprovada",
     2: "Reprovada"
 };
 
+const HTTP_STATUS = {
+    BAD_REQUEST: 400,
+    NOT_FOUND: 404,
+    CONFLICT: 409,
+    UNPROCESSABLE_ENTITY: 422,
+    INTERNAL_SERVER_ERROR: 500
+};
 
-/*
- * ============================================================
- * ESTADO
- * ============================================================
- */
+const CONFIG = {
+    REQUEST_TIMEOUT: 15000,
+    ALERT_TIMEOUT: 5000,
+    CPF_LENGTH: 11
+};
+
+const elementos = {};
 
 let materiaModal = null;
 let detalhesMateriaModal = null;
@@ -36,139 +37,141 @@ let excluirModal = null;
 let materiaParaExcluir = null;
 let materiaDetalhesAtual = null;
 
+let carregandoMaterias = false;
+let carregandoDetalhes = false;
+let salvandoMateria = false;
+let excluindoMateria = false;
+let alocandoJornalista = false;
+let desalocandoJornalista = false;
 
-/*
- * ============================================================
- * ELEMENTOS DOM
- * ============================================================
- */
+document.addEventListener(
+    "DOMContentLoaded",
+    inicializarAplicacao
+);
 
-const elementos = {};
-
-
-/*
- * ============================================================
- * INICIALIZAÇÃO
- * ============================================================
- */
-
-document.addEventListener("DOMContentLoaded", () => {
-
+function inicializarAplicacao() {
     inicializarElementos();
-
     inicializarModais();
-
     registrarEventos();
-
+    configurarEstadoInicial();
     carregarMaterias();
-});
-
+}
 
 function inicializarElementos() {
-
     elementos.alertContainer =
-        document.getElementById("alertContainer");
+        document.getElementById(
+            "alertContainer"
+        );
 
     elementos.loadingIndicator =
-        document.getElementById("loadingIndicator");
+        document.getElementById(
+            "loadingIndicator"
+        );
 
     elementos.materiasTableBody =
-        document.getElementById("materiasTableBody");
-
-
-    /*
-     * ========================================================
-     * FILTROS
-     * ========================================================
-     */
+        document.getElementById(
+            "materiasTableBody"
+        );
 
     elementos.filtroForm =
-        document.getElementById("filtroForm");
+        document.getElementById(
+            "filtroForm"
+        );
 
     elementos.filtroSearch =
-        document.getElementById("filtroSearch");
+        document.getElementById(
+            "filtroSearch"
+        );
 
     elementos.filtroStatus =
-        document.getElementById("filtroStatus");
+        document.getElementById(
+            "filtroStatus"
+        );
 
     elementos.filtroSetor =
-        document.getElementById("filtroSetor");
-
-
-    /*
-     * ========================================================
-     * NOVA MATÉRIA
-     * ========================================================
-     */
+        document.getElementById(
+            "filtroSetor"
+        );
 
     elementos.btnNovaMateria =
-        document.getElementById("btnNovaMateria");
-
-
-    /*
-     * ========================================================
-     * FORMULÁRIO
-     * ========================================================
-     */
+        document.getElementById(
+            "btnNovaMateria"
+        );
 
     elementos.materiaForm =
-        document.getElementById("materiaForm");
+        document.getElementById(
+            "materiaForm"
+        );
 
     elementos.materiaModal =
-        document.getElementById("materiaModal");
+        document.getElementById(
+            "materiaModal"
+        );
 
     elementos.materiaModalLabel =
-        document.getElementById("materiaModalLabel");
+        document.getElementById(
+            "materiaModalLabel"
+        );
 
     elementos.btnSalvarMateria =
-        document.getElementById("btnSalvarMateria");
-
-
-    /*
-     * ========================================================
-     * CAMPOS
-     * ========================================================
-     */
+        document.getElementById(
+            "btnSalvarMateria"
+        );
 
     elementos.materiaId =
-        document.getElementById("materiaId");
+        document.getElementById(
+            "materiaId"
+        );
 
     elementos.titulo =
-        document.getElementById("titulo");
+        document.getElementById(
+            "titulo"
+        );
 
     elementos.subtitulo =
-        document.getElementById("subtitulo");
+        document.getElementById(
+            "subtitulo"
+        );
 
     elementos.resumo =
-        document.getElementById("resumo");
+        document.getElementById(
+            "resumo"
+        );
 
     elementos.conteudo =
-        document.getElementById("conteudo");
+        document.getElementById(
+            "conteudo"
+        );
 
     elementos.data =
-        document.getElementById("data");
+        document.getElementById(
+            "data"
+        );
 
     elementos.status =
-        document.getElementById("status");
+        document.getElementById(
+            "status"
+        );
 
     elementos.idSetor =
-        document.getElementById("id_setor");
+        document.getElementById(
+            "id_setor"
+        );
 
     elementos.nomeJornal =
-        document.getElementById("nome_jornal");
+        document.getElementById(
+            "nome_jornal"
+        );
 
     elementos.numeroEdicao =
-        document.getElementById("numero_edicao");
+        document.getElementById(
+            "numero_edicao"
+        );
 
     elementos.cpfEditorChefe =
-        document.getElementById("cpf_editor_chefe");
-
-
-    /*
-     * ========================================================
-     * DETALHES
-     * ========================================================
-     */
+        document.getElementById(
+            "cpf_editor_chefe"
+        );
 
     elementos.detalhesMateriaModal =
         document.getElementById(
@@ -178,11 +181,6 @@ function inicializarElementos() {
     elementos.detalhesMateriaModalLabel =
         document.getElementById(
             "detalhesMateriaModalLabel"
-        );
-
-    elementos.detalhesMateriaSubtitulo =
-        document.getElementById(
-            "detalhesMateriaSubtitulo"
         );
 
     elementos.detalhesLoading =
@@ -203,6 +201,11 @@ function inicializarElementos() {
     elementos.detalhesStatus =
         document.getElementById(
             "detalhesStatus"
+        );
+
+    elementos.detalhesMateriaSubtitulo =
+        document.getElementById(
+            "detalhesMateriaSubtitulo"
         );
 
     elementos.detalhesSubtitulo =
@@ -240,13 +243,6 @@ function inicializarElementos() {
             "detalhesSetor"
         );
 
-
-    /*
-     * ========================================================
-     * JORNALISTAS
-     * ========================================================
-     */
-
     elementos.alocarJornalistaForm =
         document.getElementById(
             "alocarJornalistaForm"
@@ -267,13 +263,6 @@ function inicializarElementos() {
             "jornalistasTableBody"
         );
 
-
-    /*
-     * ========================================================
-     * EXCLUSÃO
-     * ========================================================
-     */
-
     elementos.excluirModal =
         document.getElementById(
             "excluirModal"
@@ -285,123 +274,205 @@ function inicializarElementos() {
         );
 }
 
-
-/*
- * ============================================================
- * MODAIS
- * ============================================================
- */
-
 function inicializarModais() {
-
     if (
         elementos.materiaModal &&
         window.bootstrap
     ) {
-
         materiaModal =
-            new bootstrap.Modal(
+            bootstrap.Modal.getOrCreateInstance(
                 elementos.materiaModal
             );
     }
-
 
     if (
         elementos.detalhesMateriaModal &&
         window.bootstrap
     ) {
-
         detalhesMateriaModal =
-            new bootstrap.Modal(
+            bootstrap.Modal.getOrCreateInstance(
                 elementos.detalhesMateriaModal
             );
     }
-
 
     if (
         elementos.excluirModal &&
         window.bootstrap
     ) {
-
         excluirModal =
-            new bootstrap.Modal(
+            bootstrap.Modal.getOrCreateInstance(
                 elementos.excluirModal
             );
     }
 }
 
-
-/*
- * ============================================================
- * EVENTOS
- * ============================================================
- */
-
 function registrarEventos() {
-
     elementos.btnNovaMateria?.addEventListener(
         "click",
         abrirFormularioNovaMateria
     );
 
-
     elementos.filtroForm?.addEventListener(
         "submit",
-        evento => {
-
-            evento.preventDefault();
-
-            carregarMaterias();
-        }
+        tratarSubmitFiltro
     );
-
 
     elementos.materiaForm?.addEventListener(
         "submit",
         salvarMateria
     );
 
-
     elementos.btnConfirmarExclusao?.addEventListener(
         "click",
         excluirMateria
     );
 
-
-    /*
-     * Formulário de alocação.
-     *
-     * O tratamento completo de alocação
-     * será implementado na próxima etapa.
-     */
-
     elementos.alocarJornalistaForm?.addEventListener(
         "submit",
-        evento => {
+        tratarSubmitAlocacao
+    );
 
-            evento.preventDefault();
+    elementos.btnAlocarJornalista?.addEventListener(
+        "click",
+        tratarCliqueAlocacao
+    );
 
-            alocarJornalista();
-        }
+    elementos.cpfJornalista?.addEventListener(
+        "input",
+        tratarInputCpf
+    );
+
+    elementos.cpfJornalista?.addEventListener(
+        "keydown",
+        tratarTeclaCpf
+    );
+
+    elementos.detalhesMateriaModal?.addEventListener(
+        "hidden.bs.modal",
+        tratarFechamentoModalDetalhes
+    );
+
+    elementos.materiaModal?.addEventListener(
+        "hidden.bs.modal",
+        tratarFechamentoModalMateria
+    );
+
+    elementos.excluirModal?.addEventListener(
+        "hidden.bs.modal",
+        tratarFechamentoModalExclusao
+    );
+
+    document.addEventListener(
+        "click",
+        tratarCliqueDelegado
     );
 }
 
+function configurarEstadoInicial() {
+    if (
+        elementos.status &&
+        elementos.status.value === ""
+    ) {
+        elementos.status.value =
+            String(
+                STATUS.EM_ANDAMENTO
+            );
+    }
 
-/*
- * ============================================================
- * LISTAGEM
- * ============================================================
- */
+    limparListaJornalistas();
+}
+
+function tratarSubmitFiltro(evento) {
+    evento.preventDefault();
+    carregarMaterias();
+}
+
+function tratarSubmitAlocacao(evento) {
+    evento.preventDefault();
+    evento.stopPropagation();
+
+    alocarJornalista();
+}
+
+function tratarCliqueAlocacao(evento) {
+    evento.preventDefault();
+    evento.stopPropagation();
+
+    if (
+        alocandoJornalista
+    ) {
+        return;
+    }
+
+    alocarJornalista();
+}
+
+function tratarInputCpf(evento) {
+    if (
+        !evento?.target
+    ) {
+        return;
+    }
+
+    evento.target.value =
+        normalizarCpf(
+            evento.target.value
+        );
+}
+
+function tratarTeclaCpf(evento) {
+    if (
+        evento.key !== "Enter"
+    ) {
+        return;
+    }
+
+    evento.preventDefault();
+    evento.stopPropagation();
+
+    alocarJornalista();
+}
+
+function tratarCliqueDelegado(evento) {
+    const botao =
+        evento.target.closest(
+            '[data-action="desalocar"]'
+        );
+
+    if (!botao) {
+        return;
+    }
+
+    const cpf =
+        botao.dataset.cpf;
+
+    if (!cpf) {
+        return;
+    }
+
+    evento.preventDefault();
+    evento.stopPropagation();
+
+    desalocarJornalista(
+        cpf,
+        botao
+    );
+}
 
 async function carregarMaterias() {
+    if (
+        carregandoMaterias
+    ) {
+        return;
+    }
+
+    carregandoMaterias = true;
 
     mostrarLoading(true);
 
     try {
-
         const parametros =
             construirParametrosFiltro();
-
 
         const url =
             construirUrlApi(
@@ -409,13 +480,11 @@ async function carregarMaterias() {
                 parametros
             );
 
-
-        const resposta =
-            await fetch(
+        const dados =
+            await requisicaoApi(
                 url,
                 {
                     method: "GET",
-
                     headers: {
                         "Accept":
                             "application/json"
@@ -423,267 +492,262 @@ async function carregarMaterias() {
                 }
             );
 
-
-        const dados =
-            await processarResposta(
-                resposta
-            );
-
-
         const materias =
             extrairListaMaterias(
                 dados
             );
 
-
         renderizarMaterias(
             materias
         );
-
     } catch (erro) {
-
         console.error(
             "Erro ao carregar matérias:",
             erro
         );
 
-
         mostrarAlerta(
-            obterMensagemErro(erro),
+            obterMensagemErro(
+                erro
+            ),
             "danger"
         );
 
-
-        renderizarMaterias([]);
-
+        renderizarMaterias(
+            []
+        );
     } finally {
-
+        carregandoMaterias = false;
         mostrarLoading(false);
     }
 }
 
-
-/*
- * ============================================================
- * FILTROS
- * ============================================================
- */
-
 function construirParametrosFiltro() {
-
     const parametros =
         new URLSearchParams();
 
-
     const search =
-        elementos.filtroSearch?.value.trim();
-
+        elementos.filtroSearch?.value
+            ?.trim();
 
     const status =
         elementos.filtroStatus?.value;
 
-
     const setorId =
-        elementos.filtroSetor?.value.trim();
-
+        elementos.filtroSetor?.value
+            ?.trim();
 
     if (search) {
-
-        parametros.append(
+        parametros.set(
             "search",
             search
         );
     }
 
-
     if (
         status !== undefined &&
+        status !== null &&
         status !== ""
     ) {
-
-        parametros.append(
+        parametros.set(
             "status",
             status
         );
     }
 
-
     if (setorId) {
-
-        parametros.append(
+        parametros.set(
             "setor_id",
             setorId
         );
     }
 
-
     return parametros;
 }
-
 
 function construirUrlApi(
     endpoint,
     parametros
 ) {
-
-    const queryString =
-        parametros.toString();
-
-
-    if (!queryString) {
-
+    if (
+        !parametros
+    ) {
         return endpoint;
     }
 
+    const query =
+        parametros.toString();
 
-    return `${endpoint}?${queryString}`;
+    if (!query) {
+        return endpoint;
+    }
+
+    return `${endpoint}?${query}`;
 }
 
+function extrairListaMaterias(
+    dados
+) {
+    if (
+        Array.isArray(dados)
+    ) {
+        return dados;
+    }
 
-/*
- * ============================================================
- * RENDERIZAÇÃO
- * ============================================================
- */
+    if (
+        !dados ||
+        typeof dados !== "object"
+    ) {
+        return [];
+    }
+
+    const propriedades = [
+        "items",
+        "results",
+        "data",
+        "materias"
+    ];
+
+    for (
+        const propriedade
+        of propriedades
+    ) {
+        if (
+            Array.isArray(
+                dados[
+                    propriedade
+                ]
+            )
+        ) {
+            return dados[
+                propriedade
+            ];
+        }
+    }
+
+    return [];
+}
 
 function renderizarMaterias(
     materias
 ) {
-
     if (
         !elementos.materiasTableBody
     ) {
         return;
     }
 
-
     elementos.materiasTableBody.innerHTML =
         "";
-
 
     if (
         !Array.isArray(materias) ||
         materias.length === 0
     ) {
-
         elementos.materiasTableBody.innerHTML = `
             <tr id="emptyState">
-
                 <td
                     colspan="7"
                     class="text-center text-muted py-5"
                 >
                     Nenhuma matéria encontrada.
                 </td>
-
             </tr>
         `;
 
         return;
     }
 
+    const fragment =
+        document.createDocumentFragment();
 
     materias.forEach(
         materia => {
-
-            const linha =
+            fragment.appendChild(
                 criarLinhaMateria(
                     materia
-                );
-
-
-            elementos.materiasTableBody.appendChild(
-                linha
+                )
             );
         }
     );
-}
 
+    elementos.materiasTableBody.appendChild(
+        fragment
+    );
+}
 
 function criarLinhaMateria(
     materia
 ) {
-
     const linha =
-        document.createElement("tr");
-
+        document.createElement(
+            "tr"
+        );
 
     const id =
-        materia.id_materia ?? "";
-
+        materia?.id_materia ??
+        "";
 
     const titulo =
-        materia.titulo ??
+        materia?.titulo ??
         "Sem título";
 
-
     const nomeJornal =
-        materia.nome_jornal ??
+        materia?.nome_jornal ??
         "-";
-
 
     const numeroEdicao =
-        materia.numero_edicao ??
+        materia?.numero_edicao ??
         "-";
-
 
     const data =
         formatarData(
-            materia.data
+            materia?.data
         );
-
 
     const status =
         obterStatus(
-            materia.status
+            materia?.status
         );
 
+    linha.dataset.materiaId =
+        String(
+            id
+        );
 
     linha.innerHTML = `
-
         <td>
             ${escapeHtml(id)}
         </td>
 
-
         <td>
-
             <button
                 type="button"
                 class="btn btn-link p-0 text-start fw-semibold text-decoration-none"
                 data-action="detalhes"
-                title="Visualizar detalhes da matéria"
             >
                 ${escapeHtml(titulo)}
             </button>
-
         </td>
-
 
         <td>
             ${escapeHtml(nomeJornal)}
         </td>
 
-
         <td>
             ${escapeHtml(numeroEdicao)}
         </td>
-
 
         <td>
             ${escapeHtml(data)}
         </td>
 
-
         <td>
             ${criarBadgeStatus(status)}
         </td>
 
-
         <td>
-
             <div class="acoes-materia">
-
                 <button
                     type="button"
                     class="btn btn-sm btn-outline-primary"
@@ -692,7 +756,6 @@ function criarLinhaMateria(
                     Editar
                 </button>
 
-
                 <button
                     type="button"
                     class="btn btn-sm btn-outline-danger"
@@ -700,96 +763,68 @@ function criarLinhaMateria(
                 >
                     Excluir
                 </button>
-
             </div>
-
         </td>
     `;
 
-
-    /*
-     * ========================================================
-     * BOTÃO DETALHES
-     * ========================================================
-     */
-
-    const botaoDetalhes =
+    const detalhes =
         linha.querySelector(
             '[data-action="detalhes"]'
         );
 
-
-    botaoDetalhes?.addEventListener(
+    detalhes?.addEventListener(
         "click",
-        () => abrirDetalhesMateria(
-            materia
-        )
+        evento => {
+            evento.preventDefault();
+            abrirDetalhesMateria(
+                materia
+            );
+        }
     );
 
-
-    /*
-     * ========================================================
-     * BOTÃO EDITAR
-     * ========================================================
-     */
-
-    const botaoEditar =
+    const editar =
         linha.querySelector(
             '[data-action="editar"]'
         );
 
-
-    botaoEditar?.addEventListener(
+    editar?.addEventListener(
         "click",
-        () => abrirFormularioEdicao(
-            materia
-        )
+        evento => {
+            evento.preventDefault();
+            abrirFormularioEdicao(
+                materia
+            );
+        }
     );
 
-
-    /*
-     * ========================================================
-     * BOTÃO EXCLUIR
-     * ========================================================
-     */
-
-    const botaoExcluir =
+    const excluir =
         linha.querySelector(
             '[data-action="excluir"]'
         );
 
-
-    botaoExcluir?.addEventListener(
+    excluir?.addEventListener(
         "click",
-        () => abrirConfirmacaoExclusao(
-            materia
-        )
+        evento => {
+            evento.preventDefault();
+            abrirConfirmacaoExclusao(
+                materia
+            );
+        }
     );
-
 
     return linha;
 }
 
-
-/*
- * ============================================================
- * DETALHES DA MATÉRIA
- * ============================================================
- */
-
 async function abrirDetalhesMateria(
     materia
 ) {
-
     const id =
         materia?.id_materia;
-
 
     if (
         id === undefined ||
         id === null
     ) {
-
         mostrarAlerta(
             "Não foi possível identificar a matéria.",
             "danger"
@@ -798,28 +833,28 @@ async function abrirDetalhesMateria(
         return;
     }
 
-
-    materiaDetalhesAtual =
-        materia;
-
+    materiaDetalhesAtual = {
+        ...materia
+    };
 
     limparDetalhesMateria();
 
-
     detalhesMateriaModal?.show();
 
+    carregandoDetalhes = true;
 
-    mostrarLoadingDetalhes(true);
+    mostrarLoadingDetalhes(
+        true
+    );
 
+    atualizarEstadoFormularioAlocacao();
 
     try {
-
-        const resposta =
-            await fetch(
+        const dados =
+            await requisicaoApi(
                 `${API_MATERIAS}${encodeURIComponent(id)}`,
                 {
                     method: "GET",
-
                     headers: {
                         "Accept":
                             "application/json"
@@ -827,178 +862,148 @@ async function abrirDetalhesMateria(
                 }
             );
 
-
-        const dados =
-            await processarResposta(
-                resposta
-            );
-
-
-        materiaDetalhesAtual =
-            dados;
-
+        if (
+            dados &&
+            typeof dados ===
+                "object"
+        ) {
+            materiaDetalhesAtual = {
+                ...materiaDetalhesAtual,
+                ...dados
+            };
+        }
 
         preencherDetalhesMateria(
-            dados
+            materiaDetalhesAtual
         );
-
 
         await carregarJornalistas(
             id
         );
-
     } catch (erro) {
-
         console.error(
-            "Erro ao carregar detalhes da matéria:",
+            "Erro ao carregar detalhes:",
             erro
         );
 
-
         mostrarAlerta(
-            obterMensagemErro(erro),
+            obterMensagemErro(
+                erro
+            ),
             "danger"
         );
-
     } finally {
+        carregandoDetalhes = false;
 
-        mostrarLoadingDetalhes(false);
+        mostrarLoadingDetalhes(
+            false
+        );
+
+        atualizarEstadoFormularioAlocacao();
     }
 }
-
-
-/*
- * ============================================================
- * PREENCHER DETALHES
- * ============================================================
- */
 
 function preencherDetalhesMateria(
     materia
 ) {
-
     if (!materia) {
         return;
     }
 
+    if (
+        elementos.detalhesMateriaModalLabel
+    ) {
+        elementos.detalhesMateriaModalLabel.textContent =
+            materia.titulo ??
+            "Detalhes da matéria";
+    }
 
     if (
         elementos.detalhesTitulo
     ) {
-
         elementos.detalhesTitulo.textContent =
             materia.titulo ??
             "-";
     }
 
-
     if (
         elementos.detalhesMateriaSubtitulo
     ) {
-
         elementos.detalhesMateriaSubtitulo.textContent =
             materia.subtitulo ??
             "";
     }
 
-
     if (
         elementos.detalhesSubtitulo
     ) {
-
         elementos.detalhesSubtitulo.textContent =
             materia.subtitulo ??
             "-";
     }
 
-
     if (
         elementos.detalhesResumo
     ) {
-
         elementos.detalhesResumo.textContent =
             materia.resumo ??
             "-";
     }
 
-
     if (
         elementos.detalhesConteudo
     ) {
-
         elementos.detalhesConteudo.textContent =
             materia.conteudo ??
             "-";
     }
 
-
     if (
         elementos.detalhesData
     ) {
-
         elementos.detalhesData.textContent =
             formatarData(
                 materia.data
             );
     }
 
-
     if (
         elementos.detalhesJornal
     ) {
-
         elementos.detalhesJornal.textContent =
             materia.nome_jornal ??
             "-";
     }
 
-
     if (
         elementos.detalhesEdicao
     ) {
-
         elementos.detalhesEdicao.textContent =
             materia.numero_edicao ??
             "-";
     }
 
-
     if (
         elementos.detalhesSetor
     ) {
-
         elementos.detalhesSetor.textContent =
             materia.id_setor ??
             "-";
     }
 
-
     if (
         elementos.detalhesStatus
     ) {
-
-        const status =
-            obterStatus(
-                materia.status
-            );
-
-
         elementos.detalhesStatus.innerHTML =
             criarBadgeStatus(
-                status
+                obterStatus(
+                    materia.status
+                )
             );
     }
 }
 
-
-/*
- * ============================================================
- * LIMPAR DETALHES
- * ============================================================
- */
-
 function limparDetalhesMateria() {
-
     const campos = [
         elementos.detalhesTitulo,
         elementos.detalhesMateriaSubtitulo,
@@ -1011,100 +1016,64 @@ function limparDetalhesMateria() {
         elementos.detalhesSetor
     ];
 
-
     campos.forEach(
         elemento => {
-
             if (elemento) {
-
                 elemento.textContent =
                     "";
             }
         }
     );
 
-
     if (
         elementos.detalhesStatus
     ) {
-
         elementos.detalhesStatus.innerHTML =
             "";
     }
 
+    if (
+        elementos.detalhesMateriaModalLabel
+    ) {
+        elementos.detalhesMateriaModalLabel.textContent =
+            "Detalhes da matéria";
+    }
 
     limparListaJornalistas();
 }
 
-
-/*
- * ============================================================
- * LOADING DOS DETALHES
- * ============================================================
- */
-
-function mostrarLoadingDetalhes(
-    mostrar
-) {
-
-    if (
-        !elementos.detalhesLoading
-    ) {
-        return;
-    }
-
-
-    if (mostrar) {
-
-        elementos.detalhesLoading.classList.remove(
-            "d-none"
-        );
-
-
-        elementos.detalhesLoading.textContent =
-            "Carregando detalhes...";
-
-    } else {
-
-        elementos.detalhesLoading.classList.add(
-            "d-none"
-        );
-
-
-        elementos.detalhesLoading.textContent =
-            "";
-    }
-}
-
-
-/*
- * ============================================================
- * JORNALISTAS DA MATÉRIA
- * ============================================================
- */
-
 async function carregarJornalistas(
     materiaId
 ) {
-
     if (
         !elementos.jornalistasTableBody
     ) {
         return;
     }
 
+    if (
+        materiaId === undefined ||
+        materiaId === null
+    ) {
+        limparListaJornalistas();
+        return;
+    }
 
-    limparListaJornalistas();
-
+    renderizarCarregandoJornalistas();
 
     try {
+        const endpoint =
+            `${API_MATERIAS}` +
+            `${encodeURIComponent(
+                materiaId
+            )}` +
+            `/jornalistas`;
 
-        const resposta =
-            await fetch(
-                `${API_MATERIAS}${encodeURIComponent(materiaId)}/jornalistas`,
+        const dados =
+            await requisicaoApi(
+                endpoint,
                 {
                     method: "GET",
-
                     headers: {
                         "Accept":
                             "application/json"
@@ -1112,207 +1081,278 @@ async function carregarJornalistas(
                 }
             );
 
-
-        const dados =
-            await processarResposta(
-                resposta
+        const jornalistas =
+            extrairListaJornalistas(
+                dados
             );
 
-
         renderizarJornalistas(
-            dados
+            jornalistas
         );
-
     } catch (erro) {
-
         console.error(
             "Erro ao carregar jornalistas:",
             erro
         );
 
-
-        elementos.jornalistasTableBody.innerHTML = `
-            <tr>
-
-                <td
-                    colspan="2"
-                    class="text-center text-danger py-4"
-                >
-                    Não foi possível carregar os jornalistas.
-                </td>
-
-            </tr>
-        `;
+        renderizarErroJornalistas(
+            obterMensagemErro(
+                erro
+            )
+        );
     }
 }
 
-
-/*
- * ============================================================
- * RENDERIZAÇÃO DOS JORNALISTAS
- * ============================================================
- */
-
-function renderizarJornalistas(
-    jornalistas
+function extrairListaJornalistas(
+    dados
 ) {
+    if (
+        Array.isArray(dados)
+    ) {
+        return dados;
+    }
 
+    if (
+        !dados ||
+        typeof dados !==
+            "object"
+    ) {
+        return [];
+    }
+
+    const propriedades = [
+        "items",
+        "results",
+        "data",
+        "jornalistas"
+    ];
+
+    for (
+        const propriedade
+        of propriedades
+    ) {
+        if (
+            Array.isArray(
+                dados[
+                    propriedade
+                ]
+            )
+        ) {
+            return dados[
+                propriedade
+            ];
+        }
+    }
+
+    return [];
+}
+
+function extrairCpfJornalista(
+    jornalista
+) {
+    if (
+        typeof jornalista ===
+        "string"
+    ) {
+        return jornalista;
+    }
+
+    if (
+        !jornalista ||
+        typeof jornalista !==
+            "object"
+    ) {
+        return "";
+    }
+
+    return (
+        jornalista.cpf_jornalista ??
+        jornalista.cpf ??
+        jornalista.CPF ??
+        ""
+    );
+}
+
+function renderizarCarregandoJornalistas() {
     if (
         !elementos.jornalistasTableBody
     ) {
         return;
     }
 
+    elementos.jornalistasTableBody.innerHTML = `
+        <tr>
+            <td
+                colspan="2"
+                class="text-center text-muted py-4"
+            >
+                <span
+                    class="spinner-border spinner-border-sm me-2"
+                    role="status"
+                    aria-hidden="true"
+                ></span>
+                Carregando jornalistas...
+            </td>
+        </tr>
+    `;
+}
+
+function renderizarErroJornalistas(
+    mensagem
+) {
+    if (
+        !elementos.jornalistasTableBody
+    ) {
+        return;
+    }
+
+    elementos.jornalistasTableBody.innerHTML = `
+        <tr>
+            <td
+                colspan="2"
+                class="text-center text-danger py-4"
+            >
+                ${escapeHtml(
+                    mensagem ||
+                    "Não foi possível carregar os jornalistas."
+                )}
+            </td>
+        </tr>
+    `;
+}
+
+function renderizarJornalistas(
+    jornalistas
+) {
+    if (
+        !elementos.jornalistasTableBody
+    ) {
+        return;
+    }
 
     elementos.jornalistasTableBody.innerHTML =
         "";
-
 
     if (
         !Array.isArray(jornalistas) ||
         jornalistas.length === 0
     ) {
-
-        elementos.jornalistasTableBody.innerHTML = `
-            <tr id="jornalistasEmptyState">
-
-                <td
-                    colspan="2"
-                    class="text-center text-muted py-4"
-                >
-                    Nenhum jornalista alocado.
-                </td>
-
-            </tr>
-        `;
-
+        limparListaJornalistas();
         return;
     }
 
+    const fragment =
+        document.createDocumentFragment();
+
+    const cpfs =
+        new Set();
 
     jornalistas.forEach(
         jornalista => {
-
-            const linha =
-                criarLinhaJornalista(
-                    jornalista
+            const cpf =
+                normalizarCpf(
+                    extrairCpfJornalista(
+                        jornalista
+                    )
                 );
 
+            if (!cpf) {
+                return;
+            }
 
-            elementos.jornalistasTableBody.appendChild(
-                linha
+            if (
+                cpfs.has(cpf)
+            ) {
+                return;
+            }
+
+            cpfs.add(cpf);
+
+            fragment.appendChild(
+                criarLinhaJornalista(
+                    cpf
+                )
             );
         }
     );
+
+    if (
+        fragment.childNodes.length ===
+        0
+    ) {
+        limparListaJornalistas();
+        return;
+    }
+
+    elementos.jornalistasTableBody.appendChild(
+        fragment
+    );
 }
 
-
 function criarLinhaJornalista(
-    jornalista
+    cpf
 ) {
-
     const linha =
-        document.createElement("tr");
+        document.createElement(
+            "tr"
+        );
 
-
-    const cpf =
-        typeof jornalista === "string"
-            ? jornalista
-            : jornalista?.cpf_jornalista ?? "-";
-
+    linha.dataset.cpf =
+        cpf;
 
     linha.innerHTML = `
-
         <td>
             ${escapeHtml(cpf)}
         </td>
 
-
         <td class="text-end">
-
             <button
                 type="button"
                 class="btn btn-sm btn-outline-danger"
                 data-action="desalocar"
+                data-cpf="${escapeHtml(cpf)}"
             >
                 Desalocar
             </button>
-
         </td>
     `;
-
-
-    /*
-     * O fluxo efetivo de desalocação será
-     * conectado na próxima etapa.
-     */
-
-    const botaoDesalocar =
-        linha.querySelector(
-            '[data-action="desalocar"]'
-        );
-
-
-    botaoDesalocar?.addEventListener(
-        "click",
-        () => desalocarJornalista(
-            cpf
-        )
-    );
-
 
     return linha;
 }
 
-
-/*
- * ============================================================
- * LIMPAR LISTA DE JORNALISTAS
- * ============================================================
- */
-
 function limparListaJornalistas() {
-
     if (
         !elementos.jornalistasTableBody
     ) {
         return;
     }
 
-
     elementos.jornalistasTableBody.innerHTML = `
         <tr id="jornalistasEmptyState">
-
             <td
                 colspan="2"
                 class="text-center text-muted py-4"
             >
                 Nenhum jornalista alocado.
             </td>
-
         </tr>
     `;
 }
 
-
-/*
- * ============================================================
- * ALOCAÇÃO
- * ============================================================
- */
-
 async function alocarJornalista() {
-
-    /*
-     * Implementação completa da chamada POST
-     * será feita na próxima parte.
-     */
+    if (
+        alocandoJornalista
+    ) {
+        return;
+    }
 
     if (
         !materiaDetalhesAtual ||
-        materiaDetalhesAtual.id_materia === undefined
+        materiaDetalhesAtual.id_materia ===
+            undefined ||
+        materiaDetalhesAtual.id_materia ===
+            null
     ) {
-
         mostrarAlerta(
             "Nenhuma matéria está aberta.",
             "warning"
@@ -1321,51 +1361,174 @@ async function alocarJornalista() {
         return;
     }
 
+    if (
+        !elementos.cpfJornalista
+    ) {
+        mostrarAlerta(
+            "Campo de CPF do jornalista não encontrado.",
+            "danger"
+        );
+
+        return;
+    }
+
+    const materiaId =
+        materiaDetalhesAtual.id_materia;
 
     const cpf =
-        elementos.cpfJornalista?.value.trim();
-
+        normalizarCpf(
+            elementos.cpfJornalista.value
+        );
 
     if (!cpf) {
-
         mostrarAlerta(
             "Informe o CPF do jornalista.",
             "warning"
         );
 
-        elementos.cpfJornalista?.focus();
+        elementos.cpfJornalista.focus();
 
         return;
     }
 
+    if (
+        cpf.length !==
+        CONFIG.CPF_LENGTH
+    ) {
+        mostrarAlerta(
+            "O CPF deve conter 11 dígitos.",
+            "warning"
+        );
 
-    mostrarAlerta(
-        "O fluxo de alocação será conectado na próxima etapa.",
-        "info"
+        elementos.cpfJornalista.focus();
+
+        return;
+    }
+
+    alocandoJornalista = true;
+
+    atualizarEstadoBotaoAlocacao(
+        true
     );
+
+    try {
+        const parametros =
+            new URLSearchParams();
+
+        parametros.set(
+            "cpf_jornalista",
+            cpf
+        );
+
+        const endpoint =
+            `${API_MATERIAS}` +
+            `${encodeURIComponent(
+                materiaId
+            )}` +
+            `/jornalistas?` +
+            parametros.toString();
+
+        const dados =
+            await requisicaoApi(
+                endpoint,
+                {
+                    method: "POST",
+                    headers: {
+                        "Accept":
+                            "application/json"
+                    }
+                }
+            );
+
+        elementos.cpfJornalista.value =
+            "";
+
+        mostrarAlerta(
+            obterMensagemSucesso(
+                dados,
+                "Jornalista alocado com sucesso."
+            ),
+            "success"
+        );
+
+        await carregarJornalistas(
+            materiaId
+        );
+    } catch (erro) {
+        console.error(
+            "Erro ao alocar jornalista:",
+            erro
+        );
+
+        mostrarAlerta(
+            obterMensagemErro(
+                erro
+            ),
+            "danger"
+        );
+    } finally {
+        alocandoJornalista = false;
+
+        atualizarEstadoBotaoAlocacao(
+            false
+        );
+    }
 }
 
+function atualizarEstadoBotaoAlocacao(
+    carregando
+) {
+    const botao =
+        elementos.btnAlocarJornalista;
 
-/*
- * ============================================================
- * DESALOCAÇÃO
- * ============================================================
- */
+    if (!botao) {
+        return;
+    }
+
+    botao.disabled =
+        carregando;
+
+    if (
+        carregando
+    ) {
+        botao.innerHTML = `
+            <span
+                class="spinner-border spinner-border-sm me-1"
+                role="status"
+                aria-hidden="true"
+            ></span>
+            Alocando...
+        `;
+    } else {
+        botao.textContent =
+            "Alocar";
+    }
+
+    if (
+        elementos.cpfJornalista
+    ) {
+        elementos.cpfJornalista.disabled =
+            carregando;
+    }
+}
 
 async function desalocarJornalista(
-    cpf
+    cpf,
+    botao = null
 ) {
-
-    /*
-     * Implementação completa da chamada DELETE
-     * será feita na próxima parte.
-     */
+    if (
+        desalocandoJornalista
+    ) {
+        return;
+    }
 
     if (
         !materiaDetalhesAtual ||
-        materiaDetalhesAtual.id_materia === undefined
+        materiaDetalhesAtual.id_materia ===
+            undefined ||
+        materiaDetalhesAtual.id_materia ===
+            null
     ) {
-
         mostrarAlerta(
             "Nenhuma matéria está aberta.",
             "warning"
@@ -1374,451 +1537,470 @@ async function desalocarJornalista(
         return;
     }
 
+    const materiaId =
+        materiaDetalhesAtual.id_materia;
 
-    mostrarAlerta(
-        `Desalocação do jornalista ${cpf} será conectada na próxima etapa.`,
-        "info"
+    const cpfNormalizado =
+        normalizarCpf(
+            cpf
+        );
+
+    if (
+        cpfNormalizado.length !==
+        CONFIG.CPF_LENGTH
+    ) {
+        mostrarAlerta(
+            "CPF do jornalista inválido.",
+            "warning"
+        );
+
+        return;
+    }
+
+    const confirmar =
+        window.confirm(
+            `Deseja desalocar o jornalista ${cpfNormalizado}?`
+        );
+
+    if (!confirmar) {
+        return;
+    }
+
+    desalocandoJornalista = true;
+
+    atualizarEstadoBotaoDesalocacao(
+        botao,
+        true
     );
-}
 
+    try {
+        const endpoint =
+            `${API_MATERIAS}` +
+            `${encodeURIComponent(
+                materiaId
+            )}` +
+            `/jornalistas/` +
+            `${encodeURIComponent(
+                cpfNormalizado
+            )}`;
 
-/*
- * ============================================================
- * STATUS
- * ============================================================
- */
+        const dados =
+            await requisicaoApi(
+                endpoint,
+                {
+                    method: "DELETE",
+                    headers: {
+                        "Accept":
+                            "application/json"
+                    }
+                }
+            );
 
-function obterStatus(status) {
-
-    const valor =
-        normalizarStatus(
-            status
+        mostrarAlerta(
+            obterMensagemSucesso(
+                dados,
+                "Jornalista desalocado com sucesso."
+            ),
+            "success"
         );
 
-
-    return {
-
-        valor,
-
-        label:
-            STATUS_LABELS[valor] ??
-            "Desconhecido"
-    };
-}
-
-
-function criarBadgeStatus(
-    status
-) {
-
-    const classe =
-        obterClasseStatus(
-            status
+        await carregarJornalistas(
+            materiaId
+        );
+    } catch (erro) {
+        console.error(
+            "Erro ao desalocar jornalista:",
+            erro
         );
 
+        mostrarAlerta(
+            obterMensagemErro(
+                erro
+            ),
+            "danger"
+        );
 
-    return `
-        <span
-            class="status-badge ${classe}"
-        >
-            ${escapeHtml(status.label)}
-        </span>
-    `;
+        atualizarEstadoBotaoDesalocacao(
+            botao,
+            false
+        );
+    } finally {
+        desalocandoJornalista = false;
+    }
 }
 
-
-function obterClasseStatus(
-    status
+function atualizarEstadoBotaoDesalocacao(
+    botao,
+    carregando
 ) {
+    if (!botao) {
+        return;
+    }
 
-    switch (status.valor) {
+    botao.disabled =
+        carregando;
 
-        case STATUS.EM_ANDAMENTO:
-
-            return "status-em-andamento";
-
-
-        case STATUS.APROVADA:
-
-            return "status-aprovada";
-
-
-        case STATUS.REPROVADA:
-
-            return "status-reprovada";
-
-
-        default:
-
-            return "status-desconhecido";
+    if (
+        carregando
+    ) {
+        botao.innerHTML = `
+            <span
+                class="spinner-border spinner-border-sm"
+                role="status"
+                aria-hidden="true"
+            ></span>
+            Removendo...
+        `;
+    } else {
+        botao.textContent =
+            "Desalocar";
     }
 }
 
-
-function normalizarStatus(
-    status
+function obterMensagemSucesso(
+    dados,
+    padrao
 ) {
-
     if (
-        status === null ||
-        status === undefined
+        dados &&
+        typeof dados ===
+            "object"
     ) {
-        return -1;
+        if (
+            dados.message
+        ) {
+            return String(
+                dados.message
+            );
+        }
+
+        if (
+            dados.mensagem
+        ) {
+            return String(
+                dados.mensagem
+            );
+        }
+
+        if (
+            typeof dados.detail ===
+            "string"
+        ) {
+            return dados.detail;
+        }
     }
 
-
-    if (
-        typeof status === "number"
-    ) {
-
-        return status;
-    }
-
-
-    const valor =
-        String(status)
-            .trim()
-            .toLowerCase();
-
-
-    if (valor === "0") {
-
-        return STATUS.EM_ANDAMENTO;
-    }
-
-
-    if (valor === "1") {
-
-        return STATUS.APROVADA;
-    }
-
-
-    if (valor === "2") {
-
-        return STATUS.REPROVADA;
-    }
-
-
-    if (
-        valor === "em andamento" ||
-        valor === "em_andamento"
-    ) {
-
-        return STATUS.EM_ANDAMENTO;
-    }
-
-
-    if (
-        valor === "aprovada"
-    ) {
-
-        return STATUS.APROVADA;
-    }
-
-
-    if (
-        valor === "reprovada"
-    ) {
-
-        return STATUS.REPROVADA;
-    }
-
-
-    return -1;
+    return padrao;
 }
-
-
-/*
- * ============================================================
- * NOVA MATÉRIA
- * ============================================================
- */
 
 function abrirFormularioNovaMateria() {
-
     limparFormulario();
 
+    if (
+        elementos.materiaModalLabel
+    ) {
+        elementos.materiaModalLabel.textContent =
+            "Nova matéria";
+    }
 
-    elementos.materiaModalLabel.textContent =
-        "Nova matéria";
-
-
-    elementos.btnSalvarMateria.textContent =
-        "Salvar";
-
+    if (
+        elementos.btnSalvarMateria
+    ) {
+        elementos.btnSalvarMateria.textContent =
+            "Salvar";
+    }
 
     materiaModal?.show();
 }
-
-
-/*
- * ============================================================
- * EDIÇÃO
- * ============================================================
- */
 
 function abrirFormularioEdicao(
     materia
 ) {
-
     limparFormulario();
 
+    if (
+        elementos.materiaModalLabel
+    ) {
+        elementos.materiaModalLabel.textContent =
+            "Editar matéria";
+    }
 
-    elementos.materiaModalLabel.textContent =
-        "Editar matéria";
+    if (
+        elementos.btnSalvarMateria
+    ) {
+        elementos.btnSalvarMateria.textContent =
+            "Atualizar";
+    }
 
+    if (
+        elementos.materiaId
+    ) {
+        elementos.materiaId.value =
+            materia.id_materia ??
+            "";
+    }
 
-    elementos.btnSalvarMateria.textContent =
-        "Atualizar";
+    if (
+        elementos.titulo
+    ) {
+        elementos.titulo.value =
+            materia.titulo ??
+            "";
+    }
 
+    if (
+        elementos.subtitulo
+    ) {
+        elementos.subtitulo.value =
+            materia.subtitulo ??
+            "";
+    }
 
-    elementos.materiaId.value =
-        materia.id_materia ?? "";
+    if (
+        elementos.resumo
+    ) {
+        elementos.resumo.value =
+            materia.resumo ??
+            "";
+    }
 
+    if (
+        elementos.conteudo
+    ) {
+        elementos.conteudo.value =
+            materia.conteudo ??
+            "";
+    }
 
-    elementos.titulo.value =
-        materia.titulo ?? "";
+    if (
+        elementos.data
+    ) {
+        elementos.data.value =
+            formatarDataParaInput(
+                materia.data
+            );
+    }
 
+    if (
+        elementos.status
+    ) {
+        elementos.status.value =
+            String(
+                normalizarStatus(
+                    materia.status
+                )
+            );
+    }
 
-    elementos.subtitulo.value =
-        materia.subtitulo ?? "";
+    if (
+        elementos.idSetor
+    ) {
+        elementos.idSetor.value =
+            materia.id_setor ??
+            "";
+    }
 
+    if (
+        elementos.nomeJornal
+    ) {
+        elementos.nomeJornal.value =
+            materia.nome_jornal ??
+            "";
+    }
 
-    elementos.resumo.value =
-        materia.resumo ?? "";
+    if (
+        elementos.numeroEdicao
+    ) {
+        elementos.numeroEdicao.value =
+            materia.numero_edicao ??
+            "";
+    }
 
-
-    elementos.conteudo.value =
-        materia.conteudo ?? "";
-
-
-    elementos.data.value =
-        formatarDataParaInput(
-            materia.data
-        );
-
-
-    elementos.status.value =
-        String(
-            normalizarStatus(
-                materia.status
-            )
-        );
-
-
-    elementos.idSetor.value =
-        materia.id_setor ?? "";
-
-
-    elementos.nomeJornal.value =
-        materia.nome_jornal ?? "";
-
-
-    elementos.numeroEdicao.value =
-        materia.numero_edicao ?? "";
-
-
-    elementos.cpfEditorChefe.value =
-        materia.cpf_editor_chefe ?? "";
-
+    if (
+        elementos.cpfEditorChefe
+    ) {
+        elementos.cpfEditorChefe.value =
+            materia.cpf_editor_chefe ??
+            "";
+    }
 
     materiaModal?.show();
 }
 
-
-/*
- * ============================================================
- * FORMULÁRIO
- * ============================================================
- */
-
 function limparFormulario() {
-
     elementos.materiaForm?.reset();
 
+    if (
+        elementos.materiaId
+    ) {
+        elementos.materiaId.value =
+            "";
+    }
 
-    elementos.materiaId.value =
-        "";
-
-
-    elementos.status.value =
-        String(
-            STATUS.EM_ANDAMENTO
-        );
+    if (
+        elementos.status
+    ) {
+        elementos.status.value =
+            String(
+                STATUS.EM_ANDAMENTO
+            );
+    }
 }
 
-
 function obterDadosFormulario() {
-
     const dados = {
-
         titulo:
-            elementos.titulo.value.trim(),
-
+            elementos.titulo?.value
+                ?.trim() ??
+            "",
 
         subtitulo:
-            elementos.subtitulo.value.trim(),
-
+            elementos.subtitulo?.value
+                ?.trim() ??
+            "",
 
         resumo:
-            elementos.resumo.value.trim(),
-
+            elementos.resumo?.value
+                ?.trim() ??
+            "",
 
         conteudo:
-            elementos.conteudo.value.trim(),
-
+            elementos.conteudo?.value
+                ?.trim() ??
+            "",
 
         data:
-            elementos.data.value,
-
+            elementos.data?.value ??
+            "",
 
         status:
             Number(
-                elementos.status.value
+                elementos.status?.value
             ),
 
-
         nome_jornal:
-            elementos.nomeJornal.value.trim(),
-
+            elementos.nomeJornal?.value
+                ?.trim() ??
+            "",
 
         numero_edicao:
             converterNumeroOuNull(
-                elementos.numeroEdicao.value
+                elementos.numeroEdicao?.value
             ),
-
 
         id_setor:
             converterNumeroOuNull(
-                elementos.idSetor.value
+                elementos.idSetor?.value
             ),
 
-
         cpf_editor_chefe:
-            elementos.cpfEditorChefe?.value.trim() ||
+            elementos.cpfEditorChefe?.value
+                ?.trim() ||
             null
     };
-
 
     return removerCamposOpcionaisVazios(
         dados
     );
 }
 
-
 function removerCamposOpcionaisVazios(
     dados
 ) {
-
     const resultado = {
         ...dados
     };
 
-
     if (
         resultado.subtitulo === ""
     ) {
-
         delete resultado.subtitulo;
     }
-
 
     if (
         resultado.resumo === ""
     ) {
-
         delete resultado.resumo;
     }
-
 
     if (
         resultado.nome_jornal === ""
     ) {
-
         delete resultado.nome_jornal;
     }
 
-
     if (
-        resultado.numero_edicao === null
+        resultado.numero_edicao ===
+        null
     ) {
-
         delete resultado.numero_edicao;
     }
 
-
     if (
-        resultado.id_setor === null
+        resultado.id_setor ===
+        null
     ) {
-
         delete resultado.id_setor;
     }
 
-
     if (
-        resultado.cpf_editor_chefe === null ||
-        resultado.cpf_editor_chefe === ""
+        !resultado.cpf_editor_chefe
     ) {
-
         delete resultado.cpf_editor_chefe;
     }
-
 
     return resultado;
 }
 
-
-/*
- * ============================================================
- * VALIDAÇÃO
- * ============================================================
- */
-
 function validarFormulario(
     dados
 ) {
-
     if (!dados.titulo) {
-
         mostrarAlerta(
             "O título da matéria é obrigatório.",
             "warning"
         );
 
-
-        elementos.titulo.focus();
+        elementos.titulo?.focus();
 
         return false;
     }
 
+    if (
+        dados.titulo.length >
+        255
+    ) {
+        mostrarAlerta(
+            "O título da matéria deve possuir no máximo 255 caracteres.",
+            "warning"
+        );
+
+        elementos.titulo?.focus();
+
+        return false;
+    }
 
     if (!dados.conteudo) {
-
         mostrarAlerta(
             "O conteúdo da matéria é obrigatório.",
             "warning"
         );
 
-
-        elementos.conteudo.focus();
+        elementos.conteudo?.focus();
 
         return false;
     }
 
-
     if (!dados.data) {
-
         mostrarAlerta(
             "A data da matéria é obrigatória.",
             "warning"
         );
 
-
-        elementos.data.focus();
+        elementos.data?.focus();
 
         return false;
     }
-
 
     if (
         !Number.isInteger(
@@ -1832,91 +2014,134 @@ function validarFormulario(
             dados.status
         )
     ) {
-
         mostrarAlerta(
             "O status informado é inválido.",
             "warning"
         );
 
-
-        elementos.status.focus();
+        elementos.status?.focus();
 
         return false;
     }
 
+    if (
+        dados.id_setor !==
+            null &&
+        (
+            !Number.isInteger(
+                dados.id_setor
+            ) ||
+            dados.id_setor <= 0
+        )
+    ) {
+        mostrarAlerta(
+            "O setor informado é inválido.",
+            "warning"
+        );
+
+        elementos.idSetor?.focus();
+
+        return false;
+    }
+
+    if (
+        dados.numero_edicao !==
+            null &&
+        (
+            !Number.isInteger(
+                dados.numero_edicao
+            ) ||
+            dados.numero_edicao <= 0
+        )
+    ) {
+        mostrarAlerta(
+            "O número da edição informado é inválido.",
+            "warning"
+        );
+
+        elementos.numeroEdicao?.focus();
+
+        return false;
+    }
+
+    if (
+        dados.cpf_editor_chefe &&
+        normalizarCpf(
+            dados.cpf_editor_chefe
+        ).length !==
+            CONFIG.CPF_LENGTH
+    ) {
+        mostrarAlerta(
+            "O CPF do editor-chefe deve conter 11 dígitos.",
+            "warning"
+        );
+
+        elementos.cpfEditorChefe?.focus();
+
+        return false;
+    }
 
     return true;
 }
 
-
-/*
- * ============================================================
- * POST / PUT
- * ============================================================
- */
-
 async function salvarMateria(
     evento
 ) {
-
     evento.preventDefault();
 
+    if (
+        salvandoMateria
+    ) {
+        return;
+    }
 
     const id =
-        elementos.materiaId.value.trim();
-
+        elementos.materiaId?.value
+            ?.trim() ??
+        "";
 
     const dados =
         obterDadosFormulario();
-
 
     if (
         !validarFormulario(
             dados
         )
     ) {
-
         return;
     }
 
-
     const editando =
         id !== "";
-
 
     const endpoint =
         editando
             ? `${API_MATERIAS}${encodeURIComponent(id)}`
             : API_MATERIAS;
 
-
     const metodo =
         editando
             ? "PUT"
             : "POST";
 
+    salvandoMateria = true;
 
     alterarEstadoBotaoSalvar(
         true
     );
 
-
     try {
-
         const resposta =
             await fetch(
                 endpoint,
                 {
                     method: metodo,
-
                     headers: {
                         "Content-Type":
                             "application/json",
-
                         "Accept":
                             "application/json"
                     },
-
                     body:
                         JSON.stringify(
                             dados
@@ -1924,14 +2149,11 @@ async function salvarMateria(
                 }
             );
 
-
         await processarResposta(
             resposta
         );
 
-
         materiaModal?.hide();
-
 
         mostrarAlerta(
             editando
@@ -1940,16 +2162,12 @@ async function salvarMateria(
             "success"
         );
 
-
         await carregarMaterias();
-
     } catch (erro) {
-
         console.error(
             "Erro ao salvar matéria:",
             erro
         );
-
 
         mostrarAlerta(
             obterMensagemErro(
@@ -1957,8 +2175,8 @@ async function salvarMateria(
             ),
             "danger"
         );
-
     } finally {
+        salvandoMateria = false;
 
         alterarEstadoBotaoSalvar(
             false
@@ -1966,48 +2184,39 @@ async function salvarMateria(
     }
 }
 
-
-/*
- * ============================================================
- * BOTÃO SALVAR
- * ============================================================
- */
-
 function alterarEstadoBotaoSalvar(
     carregando
 ) {
-
     if (
         !elementos.btnSalvarMateria
     ) {
-
         return;
     }
-
 
     elementos.btnSalvarMateria.disabled =
         carregando;
 
-
-    if (carregando) {
-
+    if (
+        carregando
+    ) {
         elementos.btnSalvarMateria.innerHTML = `
             <span
                 class="spinner-border spinner-border-sm"
                 role="status"
                 aria-hidden="true"
             ></span>
-
             Salvando...
         `;
 
         return;
     }
 
-
     const editando =
-        elementos.materiaId.value.trim() !== "";
-
+        (
+            elementos.materiaId?.value
+                ?.trim() ??
+            ""
+        ) !== "";
 
     elementos.btnSalvarMateria.textContent =
         editando
@@ -2015,33 +2224,16 @@ function alterarEstadoBotaoSalvar(
             : "Salvar";
 }
 
-
-/*
- * ============================================================
- * EXCLUSÃO
- * ============================================================
- */
-
 function abrirConfirmacaoExclusao(
     materia
 ) {
-
-    materiaParaExcluir =
-        materia;
-
-
-    excluirModal?.show();
-}
-
-
-async function excluirMateria() {
-
     if (
-        !materiaParaExcluir ||
-        materiaParaExcluir.id_materia === undefined ||
-        materiaParaExcluir.id_materia === null
+        !materia ||
+        materia.id_materia ===
+            undefined ||
+        materia.id_materia ===
+            null
     ) {
-
         mostrarAlerta(
             "Não foi possível identificar a matéria.",
             "danger"
@@ -2050,23 +2242,52 @@ async function excluirMateria() {
         return;
     }
 
+    materiaParaExcluir =
+        materia;
+
+    excluirModal?.show();
+}
+
+async function excluirMateria() {
+    if (
+        excluindoMateria
+    ) {
+        return;
+    }
+
+    if (
+        !materiaParaExcluir ||
+        materiaParaExcluir.id_materia ===
+            undefined ||
+        materiaParaExcluir.id_materia ===
+            null
+    ) {
+        mostrarAlerta(
+            "Não foi possível identificar a matéria.",
+            "danger"
+        );
+
+        return;
+    }
 
     const id =
         materiaParaExcluir.id_materia;
 
+    excluindoMateria = true;
 
-    elementos.btnConfirmarExclusao.disabled =
-        true;
-
+    if (
+        elementos.btnConfirmarExclusao
+    ) {
+        elementos.btnConfirmarExclusao.disabled =
+            true;
+    }
 
     try {
-
         const resposta =
             await fetch(
                 `${API_MATERIAS}${encodeURIComponent(id)}`,
                 {
                     method: "DELETE",
-
                     headers: {
                         "Accept":
                             "application/json"
@@ -2074,34 +2295,36 @@ async function excluirMateria() {
                 }
             );
 
-
         await processarResposta(
             resposta
         );
 
-
         excluirModal?.hide();
-
 
         mostrarAlerta(
             "Matéria excluída com sucesso.",
             "success"
         );
 
+        if (
+            materiaDetalhesAtual?.id_materia ===
+            id
+        ) {
+            materiaDetalhesAtual =
+                null;
+
+            detalhesMateriaModal?.hide();
+        }
 
         materiaParaExcluir =
             null;
 
-
         await carregarMaterias();
-
     } catch (erro) {
-
         console.error(
             "Erro ao excluir matéria:",
             erro
         );
-
 
         mostrarAlerta(
             obterMensagemErro(
@@ -2109,49 +2332,139 @@ async function excluirMateria() {
             ),
             "danger"
         );
-
     } finally {
+        excluindoMateria = false;
 
-        elementos.btnConfirmarExclusao.disabled =
-            false;
+        if (
+            elementos.btnConfirmarExclusao
+        ) {
+            elementos.btnConfirmarExclusao.disabled =
+                false;
+        }
     }
 }
 
+function tratarFechamentoModalDetalhes() {
+    carregandoDetalhes = false;
 
-/*
- * ============================================================
- * RESPOSTA HTTP
- * ============================================================
- */
+    materiaDetalhesAtual =
+        null;
+
+    if (
+        elementos.cpfJornalista
+    ) {
+        elementos.cpfJornalista.value =
+            "";
+        elementos.cpfJornalista.disabled =
+            false;
+    }
+
+    if (
+        elementos.btnAlocarJornalista
+    ) {
+        elementos.btnAlocarJornalista.disabled =
+            false;
+        elementos.btnAlocarJornalista.textContent =
+            "Alocar";
+    }
+
+    limparListaJornalistas();
+}
+
+function tratarFechamentoModalMateria() {
+    if (
+        !salvandoMateria
+    ) {
+        limparFormulario();
+    }
+}
+
+function tratarFechamentoModalExclusao() {
+    if (
+        !excluindoMateria
+    ) {
+        materiaParaExcluir =
+            null;
+    }
+}
+
+async function requisicaoApi(
+    url,
+    opcoes = {}
+) {
+    const controller =
+        new AbortController();
+
+    const timeout =
+        window.setTimeout(
+            () => {
+                controller.abort();
+            },
+            CONFIG.REQUEST_TIMEOUT
+        );
+
+    try {
+        const resposta =
+            await fetch(
+                url,
+                {
+                    ...opcoes,
+                    signal:
+                        controller.signal
+                }
+            );
+
+        return await processarResposta(
+            resposta
+        );
+    } catch (erro) {
+        if (
+            erro?.name ===
+            "AbortError"
+        ) {
+            const timeoutErro =
+                new Error(
+                    "A requisição demorou demais para responder."
+                );
+
+            timeoutErro.code =
+                "REQUEST_TIMEOUT";
+
+            throw timeoutErro;
+        }
+
+        throw erro;
+    } finally {
+        window.clearTimeout(
+            timeout
+        );
+    }
+}
 
 async function processarResposta(
     resposta
 ) {
-
-    let dados = null;
-
-
     const contentType =
         resposta.headers.get(
             "content-type"
-        );
+        ) || "";
 
+    let dados = null;
 
     if (
-        contentType &&
         contentType.includes(
             "application/json"
         )
     ) {
-
-        dados =
-            await resposta.json();
-
+        try {
+            dados =
+                await resposta.json();
+        } catch {
+            dados = null;
+        }
     } else {
-
         const texto =
             await resposta.text();
-
 
         dados =
             texto
@@ -2161,216 +2474,181 @@ async function processarResposta(
                 : null;
     }
 
-
-    if (!resposta.ok) {
-
+    if (
+        !resposta.ok
+    ) {
         const erro =
             new Error(
                 obterDetalheErro(
                     dados
-                ) ??
-                `Erro HTTP ${resposta.status}`
+                ) ||
+                obterMensagemHttp(
+                    resposta.status
+                )
             );
-
 
         erro.status =
             resposta.status;
 
-
         erro.data =
             dados;
-
 
         throw erro;
     }
 
-
     return dados;
 }
 
+function obterMensagemHttp(
+    status
+) {
+    switch (
+        status
+    ) {
+        case HTTP_STATUS.BAD_REQUEST:
+            return "Dados inválidos.";
+
+        case HTTP_STATUS.NOT_FOUND:
+            return "Registro não encontrado.";
+
+        case HTTP_STATUS.CONFLICT:
+            return "A operação entrou em conflito com os dados existentes.";
+
+        case HTTP_STATUS.UNPROCESSABLE_ENTITY:
+            return "Os dados enviados são inválidos.";
+
+        case HTTP_STATUS.INTERNAL_SERVER_ERROR:
+            return "Erro interno do servidor.";
+
+        default:
+            return `Erro HTTP ${status}.`;
+    }
+}
 
 function obterDetalheErro(
     dados
 ) {
-
     if (!dados) {
-
         return null;
     }
 
-
     if (
-        typeof dados === "string"
+        typeof dados ===
+        "string"
     ) {
-
         return dados;
     }
 
-
-    if (dados.detail) {
-
+    if (
+        dados.detail !==
+        undefined
+    ) {
         if (
             Array.isArray(
                 dados.detail
             )
         ) {
-
             return dados.detail
                 .map(
                     item => {
 
                         if (
-                            typeof item === "string"
+                            typeof item ===
+                            "string"
                         ) {
-
                             return item;
                         }
 
-
                         return (
-                            item.msg ??
+                            item?.msg ??
+                            item?.message ??
                             JSON.stringify(
                                 item
                             )
                         );
                     }
                 )
-                .join("; ");
+                .join(
+                    "; "
+                );
         }
 
+        if (
+            typeof dados.detail ===
+            "object"
+        ) {
+            return (
+                dados.detail.message ??
+                JSON.stringify(
+                    dados.detail
+                )
+            );
+        }
 
         return String(
             dados.detail
         );
     }
 
-
-    if (dados.message) {
-
+    if (
+        dados.message
+    ) {
         return String(
             dados.message
         );
     }
 
+    if (
+        dados.mensagem
+    ) {
+        return String(
+            dados.mensagem
+        );
+    }
 
-    if (dados.error) {
-
+    if (
+        dados.error
+    ) {
         return String(
             dados.error
         );
     }
 
-
     return null;
 }
-
 
 function obterMensagemErro(
     erro
 ) {
-
     if (
-        erro &&
-        erro.message
+        erro?.code ===
+        "REQUEST_TIMEOUT"
     ) {
-
         return erro.message;
     }
 
+    if (
+        erro?.message
+    ) {
+        return erro.message;
+    }
 
     return "Ocorreu um erro inesperado.";
 }
-
-
-/*
- * ============================================================
- * LISTA DA API
- * ============================================================
- */
-
-function extrairListaMaterias(
-    dados
-) {
-
-    if (
-        Array.isArray(dados)
-    ) {
-
-        return dados;
-    }
-
-
-    if (
-        !dados ||
-        typeof dados !== "object"
-    ) {
-
-        return [];
-    }
-
-
-    if (
-        Array.isArray(
-            dados.items
-        )
-    ) {
-
-        return dados.items;
-    }
-
-
-    if (
-        Array.isArray(
-            dados.results
-        )
-    ) {
-
-        return dados.results;
-    }
-
-
-    if (
-        Array.isArray(
-            dados.data
-        )
-    ) {
-
-        return dados.data;
-    }
-
-
-    if (
-        Array.isArray(
-            dados.materias
-        )
-    ) {
-
-        return dados.materias;
-    }
-
-
-    return [];
-}
-
-
-/*
- * ============================================================
- * ALERTAS
- * ============================================================
- */
 
 function mostrarAlerta(
     mensagem,
     tipo = "info"
 ) {
-
     if (
         !elementos.alertContainer
     ) {
+        console.warn(
+            mensagem
+        );
 
         return;
     }
-
 
     const tiposPermitidos = [
         "success",
@@ -2379,7 +2657,6 @@ function mostrarAlerta(
         "info"
     ];
 
-
     const tipoSeguro =
         tiposPermitidos.includes(
             tipo
@@ -2387,132 +2664,171 @@ function mostrarAlerta(
             ? tipo
             : "info";
 
-
     const alerta =
         document.createElement(
             "div"
         );
 
-
     alerta.className =
         `alert alert-${tipoSeguro} alert-dismissible fade show`;
-
 
     alerta.setAttribute(
         "role",
         "alert"
     );
 
+    const texto =
+        document.createElement(
+            "span"
+        );
 
-    alerta.innerHTML = `
-        ${escapeHtml(mensagem)}
+    texto.textContent =
+        mensagem ??
+        "";
 
-        <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="alert"
-            aria-label="Fechar"
-        ></button>
-    `;
+    alerta.appendChild(
+        texto
+    );
 
+    const botao =
+        document.createElement(
+            "button"
+        );
+
+    botao.type =
+        "button";
+
+    botao.className =
+        "btn-close";
+
+    botao.setAttribute(
+        "data-bs-dismiss",
+        "alert"
+    );
+
+    botao.setAttribute(
+        "aria-label",
+        "Fechar"
+    );
+
+    alerta.appendChild(
+        botao
+    );
 
     elementos.alertContainer.appendChild(
         alerta
     );
 
-
     window.setTimeout(
         () => {
-
             if (
                 alerta &&
                 alerta.parentNode
             ) {
-
                 alerta.remove();
             }
-
         },
-        5000
+        CONFIG.ALERT_TIMEOUT
     );
 }
-
-
-/*
- * ============================================================
- * LOADING
- * ============================================================
- */
 
 function mostrarLoading(
     mostrar
 ) {
-
     if (
         !elementos.loadingIndicator
     ) {
-
         return;
     }
 
+    elementos.loadingIndicator.classList.toggle(
+        "d-none",
+        !mostrar
+    );
 
-    if (mostrar) {
-
-        elementos.loadingIndicator.classList.remove(
-            "d-none"
-        );
-
-
+    if (
+        mostrar
+    ) {
         elementos.loadingIndicator.innerHTML = `
             <span
                 class="loading-spinner"
                 aria-hidden="true"
             ></span>
-
             Carregando...
         `;
-
     } else {
-
-        elementos.loadingIndicator.classList.add(
-            "d-none"
-        );
-
-
         elementos.loadingIndicator.innerHTML =
             "";
     }
 }
 
+function mostrarLoadingDetalhes(
+    mostrar
+) {
+    if (
+        !elementos.detalhesLoading
+    ) {
+        return;
+    }
 
-/*
- * ============================================================
- * DATAS
- * ============================================================
- */
+    elementos.detalhesLoading.classList.toggle(
+        "d-none",
+        !mostrar
+    );
+
+    elementos.detalhesLoading.textContent =
+        mostrar
+            ? "Carregando detalhes..."
+            : "";
+}
+
+function atualizarEstadoFormularioAlocacao() {
+    const materiaDisponivel =
+        materiaDetalhesAtual?.id_materia !==
+            undefined &&
+        materiaDetalhesAtual?.id_materia !==
+            null;
+
+    const habilitado =
+        materiaDisponivel &&
+        !carregandoDetalhes &&
+        !alocandoJornalista;
+
+    if (
+        elementos.cpfJornalista
+    ) {
+        elementos.cpfJornalista.disabled =
+            !habilitado;
+    }
+
+    if (
+        elementos.btnAlocarJornalista
+    ) {
+        elementos.btnAlocarJornalista.disabled =
+            !habilitado;
+    }
+}
 
 function formatarData(
     data
 ) {
-
     if (!data) {
-
         return "-";
     }
 
-
     const valor =
-        String(data);
-
+        String(
+            data
+        );
 
     const correspondencia =
         valor.match(
             /^(\d{4})-(\d{2})-(\d{2})$/
         );
 
-
-    if (correspondencia) {
-
+    if (
+        correspondencia
+    ) {
         return (
             `${correspondencia[3]}/` +
             `${correspondencia[2]}/` +
@@ -2520,51 +2836,46 @@ function formatarData(
         );
     }
 
-
-    const dataObjeto =
-        new Date(data);
-
+    const objeto =
+        new Date(
+            data
+        );
 
     if (
         Number.isNaN(
-            dataObjeto.getTime()
+            objeto.getTime()
         )
     ) {
-
         return valor;
     }
-
 
     return new Intl.DateTimeFormat(
         "pt-BR"
     ).format(
-        dataObjeto
+        objeto
     );
 }
-
 
 function formatarDataParaInput(
     data
 ) {
-
     if (!data) {
-
         return "";
     }
 
-
     const valor =
-        String(data);
-
+        String(
+            data
+        );
 
     const correspondencia =
         valor.match(
             /^(\d{4})-(\d{2})-(\d{2})/
         );
 
-
-    if (correspondencia) {
-
+    if (
+        correspondencia
+    ) {
         return (
             `${correspondencia[1]}-` +
             `${correspondencia[2]}-` +
@@ -2572,34 +2883,49 @@ function formatarDataParaInput(
         );
     }
 
-
     return "";
 }
 
+function normalizarCpf(
+    cpf
+) {
+    if (
+        cpf === null ||
+        cpf === undefined
+    ) {
+        return "";
+    }
 
-/*
- * ============================================================
- * UTILITÁRIOS
- * ============================================================
- */
+    return String(
+        cpf
+    )
+        .replace(
+            /\D/g,
+            ""
+        )
+        .slice(
+            0,
+            CONFIG.CPF_LENGTH
+        );
+}
 
 function converterNumeroOuNull(
     valor
 ) {
-
     if (
         valor === null ||
         valor === undefined ||
-        String(valor).trim() === ""
+        String(
+            valor
+        ).trim() === ""
     ) {
-
         return null;
     }
 
-
     const numero =
-        Number(valor);
-
+        Number(
+            valor
+        );
 
     return Number.isFinite(
         numero
@@ -2608,42 +2934,136 @@ function converterNumeroOuNull(
         : null;
 }
 
+function obterStatus(
+    status
+) {
+    const valor =
+        normalizarStatus(
+            status
+        );
+
+    return {
+        valor,
+        label:
+            STATUS_LABELS[
+                valor
+            ] ??
+            "Desconhecido"
+    };
+}
+
+function normalizarStatus(
+    status
+) {
+    if (
+        status === null ||
+        status === undefined
+    ) {
+        return -1;
+    }
+
+    if (
+        typeof status ===
+        "number"
+    ) {
+        return status;
+    }
+
+    const valor =
+        String(
+            status
+        )
+            .trim()
+            .toLowerCase();
+
+    if (
+        valor === "0" ||
+        valor === "em andamento" ||
+        valor === "em_andamento"
+    ) {
+        return STATUS.EM_ANDAMENTO;
+    }
+
+    if (
+        valor === "1" ||
+        valor === "aprovada"
+    ) {
+        return STATUS.APROVADA;
+    }
+
+    if (
+        valor === "2" ||
+        valor === "reprovada"
+    ) {
+        return STATUS.REPROVADA;
+    }
+
+    return -1;
+}
+
+function criarBadgeStatus(
+    status
+) {
+    return `
+        <span
+            class="status-badge ${obterClasseStatus(status)}"
+        >
+            ${escapeHtml(
+                status.label
+            )}
+        </span>
+    `;
+}
+
+function obterClasseStatus(
+    status
+) {
+    switch (
+        status.valor
+    ) {
+        case STATUS.EM_ANDAMENTO:
+            return "status-em-andamento";
+
+        case STATUS.APROVADA:
+            return "status-aprovada";
+
+        case STATUS.REPROVADA:
+            return "status-reprovada";
+
+        default:
+            return "status-desconhecido";
+    }
+}
 
 function escapeHtml(
     valor
 ) {
-
     if (
         valor === null ||
         valor === undefined
     ) {
-
         return "";
     }
 
-
-    return String(valor)
-
+    return String(
+        valor
+    )
         .replace(
             /&/g,
             "&amp;"
         )
-
         .replace(
             /</g,
             "&lt;"
         )
-
         .replace(
             />/g,
             "&gt;"
         )
-
         .replace(
             /"/g,
             "&quot;"
         )
-
         .replace(
             /'/g,
             "&#039;"
