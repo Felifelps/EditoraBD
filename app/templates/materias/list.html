@@ -24,9 +24,7 @@
     action="/materias"
     class="row g-3 mb-4"
 >
-
     <div class="col-md-5">
-
         <label
             for="search"
             class="form-label"
@@ -42,11 +40,9 @@
             value="{{ search }}"
             placeholder="Buscar por titulo"
         >
-
     </div>
 
     <div class="col-md-3">
-
         <label
             for="status"
             class="form-label"
@@ -59,7 +55,6 @@
             class="form-select"
             name="status"
         >
-
             <option
                 value=""
                 {% if status is none %}
@@ -95,13 +90,10 @@
             >
                 Reprovada
             </option>
-
         </select>
-
     </div>
 
     <div class="col-md-3">
-
         <label
             for="setor_id"
             class="form-label"
@@ -114,7 +106,6 @@
             class="form-select"
             name="setor_id"
         >
-
             <option
                 value=""
                 {% if setor_id is none %}
@@ -125,7 +116,6 @@
             </option>
 
             {% for setor in setores %}
-
             <option
                 value="{{ setor.id_setor }}"
                 {% if setor_id == setor.id_setor %}
@@ -134,32 +124,23 @@
             >
                 {{ setor.nome }}
             </option>
-
             {% endfor %}
-
         </select>
-
     </div>
 
     <div class="col-md-1 d-flex align-items-end">
-
         <button
             class="btn btn-primary w-100"
             type="submit"
         >
             Filtrar
         </button>
-
     </div>
-
 </form>
 
 <div class="table-responsive">
-
     <table class="table table-striped">
-
         <thead>
-
             <tr>
                 <th>ID</th>
                 <th>Titulo</th>
@@ -169,15 +150,11 @@
                 <th>Status</th>
                 <th></th>
             </tr>
-
         </thead>
 
         <tbody>
-
             {% for materia in materias %}
-
             <tr>
-
                 <td>
                     {{ materia.id_materia }}
                 </td>
@@ -199,7 +176,6 @@
                 </td>
 
                 <td>
-
                     {% if materia.status == 0 %}
                         Em andamento
                     {% elif materia.status == 1 %}
@@ -209,11 +185,9 @@
                     {% else %}
                         -
                     {% endif %}
-
                 </td>
 
                 <td class="text-end">
-
                     <a
                         class="btn btn-sm btn-outline-secondary"
                         href="/materias/{{ materia.id_materia }}"
@@ -234,39 +208,28 @@
                         class="d-inline"
                         onsubmit="return confirm('Excluir materia?');"
                     >
-
                         <button
                             class="btn btn-sm btn-outline-danger"
                             type="submit"
                         >
                             Excluir
                         </button>
-
                     </form>
-
                 </td>
-
             </tr>
 
             {% else %}
-
             <tr>
-
                 <td
                     colspan="7"
                     class="text-muted"
                 >
                     Nenhuma materia cadastrada.
                 </td>
-
             </tr>
-
             {% endfor %}
-
         </tbody>
-
     </table>
-
 </div>
 
 {% endblock %}

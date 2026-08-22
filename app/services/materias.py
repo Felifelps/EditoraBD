@@ -4,7 +4,10 @@ from fastapi import Depends
 from psycopg import Connection
 
 from app.db.dependencies import get_conn
-from app.exceptions.materias import MateriaNaoEncontradaError
+from app.exceptions.materias import (
+    MateriaJaExisteError,
+    MateriaNaoEncontradaError,
+)
 from app.repositories.materias import MateriaRepository
 from app.schemas.materias import MateriaAtualizar, MateriaCriar
 
@@ -43,16 +46,49 @@ class MateriaService:
         self,
         dados: MateriaCriar,
     ) -> dict[str, Any]:
-        return self.repo.criar(dados)
+        duplicada = self.repo.buscar_duplicada(
+            titulo=dados.titulo,
+            data=dados.data,
+            nome_jornal=dados.nome_jornal,
+            numero_edicao=dados.numero_edicao,
+            id_setor=dados.id_setor,
+        )
+
+        if duplicada is not None:
+            raise MateriaJaExisteError(
+                "Já existe uma matéria com o mesmo "
+                "título, data, jornal, edição e setor."
+            )
+
+        return self.repo.criar(
+            dados.model_dump()
+        )
 
     def atualizar(
         self,
         id_materia: int,
         dados: MateriaAtualizar,
     ) -> dict[str, Any]:
+        self.obter_por_id(id_materia)
+
+        duplicada = self.repo.buscar_duplicada(
+            titulo=dados.titulo,
+            data=dados.data,
+            nome_jornal=dados.nome_jornal,
+            numero_edicao=dados.numero_edicao,
+            id_setor=dados.id_setor,
+            id_materia=id_materia,
+        )
+
+        if duplicada is not None:
+            raise MateriaJaExisteError(
+                "Já existe outra matéria com os mesmos "
+                "dados."
+            )
+
         materia = self.repo.atualizar(
             id_materia,
-            dados,
+            dados.model_dump(),
         )
 
         if materia is None:
@@ -67,13 +103,20 @@ class MateriaService:
         id_materia: int,
         novo_status: int,
     ) -> None:
-        if not self.repo.atualizar_status(
+        self.obter_por_id(id_materia)
+
+        self.repo.atualizar_status(
             id_materia,
             novo_status,
-        ):
-            raise MateriaNaoEncontradaError(
-                f"Matéria com ID {id_materia} não encontrada"
-            )
+        )
+
+    def deletar(
+        self,
+        id_materia: int,
+    ) -> None:
+        self.obter_por_id(id_materia)
+
+        self.repo.deletar(id_materia)
 
     def listar_jornalistas(
         self,
@@ -108,15 +151,6 @@ class MateriaService:
             materia_id,
             jornalista_cpf,
         )
-
-    def deletar(
-        self,
-        id_materia: int,
-    ) -> None:
-        if not self.repo.deletar(id_materia):
-            raise MateriaNaoEncontradaError(
-                f"Matéria com ID {id_materia} não encontrada"
-            )
 
 
 def get_materia_service(

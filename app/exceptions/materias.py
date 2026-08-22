@@ -1,9 +1,6 @@
-from fastapi import HTTPException
-
-
-class MateriaNaoEncontradaError(HTTPException):
+class MateriaJaExisteError(Exception):
     pass
 
 
-class MateriaJaExisteError(HTTPException):
+class MateriaNaoEncontradaError(Exception):
     pass
