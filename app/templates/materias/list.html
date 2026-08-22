@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Matérias
+{% endblock %}
+
+{% block content %}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+
+    <div>
+        <h1 class="h3 mb-1">Matérias</h1>
+        <p class="text-muted mb-0">
+            Consulte e gerencie as matérias cadastradas.
+        </p>
+    </div>
+
+    <a href="/materias/novo" class="btn btn-primary">
+        Nova matéria
+    </a>
+
+</div>
+
+{% if erro %}
+<div class="alert alert-danger" role="alert">
+    {{ erro }}
+</div>
+{% endif %}
+
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-body">
+
+        <form method="get" action="/materias" class="row g-3">
+
+            <div class="col-12 col-md-6">
+
+                <label for="titulo" class="form-label">
+                    Título
+                </label>
+
+                <input
+                    type="text"
+                    id="titulo"
+                    name="titulo"
+                    class="form-control"
+                    value="{{ titulo or '' }}"
+                    placeholder="Pesquisar por título"
+                >
+
+            </div>
+
+            <div class="col-12 col-md-3">
+
+                <label for="status" class="form-label">
+                    Status
+                </label>
+
+                <select
+                    id="status"
+                    name="status"
+                    class="form-select"
+                >
+                    <option value="">Todos</option>
+
+                    <option
+                        value="0"
+                        {% if status is not none and status == 0 %}
+                            selected
+                        {% endif %}
+                    >
+                        Em andamento
+                    </option>
+
+                    <option
+                        value="1"
+                        {% if status is not none and status == 1 %}
+                            selected
+                        {% endif %}
+                    >
+                        Aprovada
+                    </option>
+
+                    <option
+                        value="2"
+                        {% if status is not none and status == 2 %}
+                            selected
+                        {% endif %}
+                    >
+                        Reprovada
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="col-12 col-md-3 d-flex align-items-end">
+
+                <button
+                    type="submit"
+                    class="btn btn-dark w-100"
+                >
+                    Filtrar
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<div class="card shadow-sm border-0">
+
+    <div class="card-body">
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle">
+
+                <thead class="table-light">
+
+                    <tr>
+                        <th>ID</th>
+                        <th>Título</th>
+                        <th>Jornal</th>
+                        <th>Edição</th>
+                        <th>Setor</th>
+                        <th>Data</th>
+                        <th>Status</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for materia in materias %}
+
+                    <tr>
+
+                        <td>
+                            {{ materia.id_materia }}
+                        </td>
+
+                        <td>
+                            {{ materia.titulo }}
+                        </td>
+
+                        <td>
+                            {{ materia.nome_jornal or "-" }}
+                        </td>
+
+                        <td>
+                            {{ materia.numero_edicao or "-" }}
+                        </td>
+
+                        <td>
+                            {{ materia.id_setor or "-" }}
+                        </td>
+
+                        <td>
+                            {{ materia.data }}
+                        </td>
+
+                        <td>
+
+                            {% if materia.status == 0 %}
+                                Em andamento
+                            {% elif materia.status == 1 %}
+                                Aprovada
+                            {% elif materia.status == 2 %}
+                                Reprovada
+                            {% else %}
+                                -
+                            {% endif %}
+
+                        </td>
+
+                        <td class="text-end">
+
+                            <a
+                                href="/materias/{{ materia.id_materia }}"
+                                class="btn btn-sm btn-outline-primary"
+                            >
+                                Detalhes
+                            </a>
+
+                            <a
+                                href="/materias/{{ materia.id_materia }}/editar"
+                                class="btn btn-sm btn-outline-secondary"
+                            >
+                                Editar
+                            </a>
+
+                            <form
+                                method="post"
+                                action="/materias/{{ materia.id_materia }}/deletar"
+                                class="d-inline"
+                            >
+
+                                <button
+                                    type="submit"
+                                    class="btn btn-sm btn-outline-danger"
+                                >
+                                    Excluir
+                                </button>
+
+                            </form>
+
+                        </td>
+
+                    </tr>
+
+                    {% else %}
+
+                    <tr>
+
+                        <td
+                            colspan="8"
+                            class="text-center text-muted py-5"
+                        >
+                            Nenhuma matéria encontrada.
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

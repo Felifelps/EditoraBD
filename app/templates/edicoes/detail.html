@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ edicao.nome_jornal }} - Edicao {{ edicao.numero_edicao }}{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">{{ edicao.nome_jornal }} - Edicao {{ edicao.numero_edicao }}</h1>
+<dl class="row">
+    <dt class="col-sm-3">Data</dt><dd class="col-sm-9">{{ edicao.data or "-" }}</dd>
+</dl>
+<a class="btn btn-primary" href="/edicoes/{{ edicao.nome_jornal }}/{{ edicao.numero_edicao }}/editar">Editar</a>
+<form method="post" action="/edicoes/{{ edicao.nome_jornal }}/{{ edicao.numero_edicao }}/deletar" class="d-inline"
+      onsubmit="return confirm('Excluir edicao?')">
+    <button class="btn btn-danger" type="submit">Excluir</button>
+</form>
+<a class="btn btn-outline-secondary" href="/edicoes">Voltar</a>
+{% endblock %}

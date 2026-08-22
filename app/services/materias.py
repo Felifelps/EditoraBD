@@ -1,4 +1,5 @@
 from typing import Any
+
 from fastapi import Depends
 from psycopg import Connection
 
@@ -17,18 +18,18 @@ class MateriaService:
         self,
         search: str | None = None,
         status: int | None = None,
-        setor_id: int | None = None
+        setor_id: int | None = None,
     ) -> list[dict[str, Any]]:
         return self.repo.listar_todas(
             search=search,
             status=status,
-            setor_id=setor_id
+            setor_id=setor_id,
         )
 
     def obter_por_id(
         self,
-        id_materia: int
-    ) -> dict[str, Any] | None:
+        id_materia: int,
+    ) -> dict[str, Any]:
         materia = self.repo.buscar_por_id(id_materia)
 
         if materia is None:
@@ -40,18 +41,18 @@ class MateriaService:
 
     def criar(
         self,
-        dados: MateriaCriar
+        dados: MateriaCriar,
     ) -> dict[str, Any]:
         return self.repo.criar(dados)
 
     def atualizar(
         self,
         id_materia: int,
-        dados: MateriaAtualizar
+        dados: MateriaAtualizar,
     ) -> dict[str, Any]:
         materia = self.repo.atualizar(
             id_materia,
-            dados
+            dados,
         )
 
         if materia is None:
@@ -64,11 +65,11 @@ class MateriaService:
     def atualizar_status(
         self,
         id_materia: int,
-        novo_status: int
+        novo_status: int,
     ) -> None:
         if not self.repo.atualizar_status(
             id_materia,
-            novo_status
+            novo_status,
         ):
             raise MateriaNaoEncontradaError(
                 f"Matéria com ID {id_materia} não encontrada"
@@ -76,43 +77,41 @@ class MateriaService:
 
     def listar_jornalistas(
         self,
-        materia_id: int
+        materia_id: int,
     ) -> list[dict[str, Any]]:
-        materia = self.repo.buscar_por_id(materia_id)
+        self.obter_por_id(materia_id)
 
-        if materia is None:
-            raise MateriaNaoEncontradaError(
-                f"Matéria com ID {materia_id} não encontrada"
-            )
-
-        return self.repo.listar_jornalistas(materia_id)
+        return self.repo.listar_jornalistas(
+            materia_id
+        )
 
     def vincular_jornalista(
         self,
         materia_id: int,
-        jornalista_cpf: str
+        jornalista_cpf: str,
     ) -> None:
-        if not self.repo.vincular_jornalista(
+        self.obter_por_id(materia_id)
+
+        self.repo.vincular_jornalista(
             materia_id,
-            jornalista_cpf
-        ):
-            raise MateriaNaoEncontradaError(
-                f"Matéria com ID {materia_id} não encontrada"
-            )
+            jornalista_cpf,
+        )
 
     def desvincular_jornalista(
         self,
         materia_id: int,
-        jornalista_cpf: str
+        jornalista_cpf: str,
     ) -> None:
+        self.obter_por_id(materia_id)
+
         self.repo.desvincular_jornalista(
             materia_id,
-            jornalista_cpf
+            jornalista_cpf,
         )
 
     def deletar(
         self,
-        id_materia: int
+        id_materia: int,
     ) -> None:
         if not self.repo.deletar(id_materia):
             raise MateriaNaoEncontradaError(
@@ -121,7 +120,7 @@ class MateriaService:
 
 
 def get_materia_service(
-    conn: Connection = Depends(get_conn)
+    conn: Connection = Depends(get_conn),
 ) -> MateriaService:
     return MateriaService(
         MateriaRepository(conn)

@@ -24,7 +24,6 @@
 
     </div>
 
-
     <!-- =====================================================
          NAVEGAÇÃO DOS MÓDULOS
          ===================================================== -->
@@ -34,7 +33,7 @@
         <div class="col-12 col-sm-6 col-lg-3">
 
             <a
-                href="#materias"
+                href="/materias"
                 class="text-decoration-none"
             >
 
@@ -57,7 +56,6 @@
             </a>
 
         </div>
-
 
         <div class="col-12 col-sm-6 col-lg-3">
 
@@ -86,67 +84,89 @@
 
         </div>
 
-
         <div class="col-12 col-sm-6 col-lg-3">
 
-            <div class="card shadow-sm border-0 h-100">
+            <a
+                href="/jornais"
+                class="text-decoration-none"
+            >
 
-                <div class="card-body">
+                <div class="card shadow-sm border-0 h-100">
 
-                    <h2 class="h5">
-                        Jornais
-                    </h2>
+                    <div class="card-body">
 
-                    <p class="text-muted small mb-0">
-                        Gerenciamento de jornais.
-                    </p>
+                        <h2 class="h5">
+                            Jornais
+                        </h2>
+
+                        <p class="text-muted small mb-0">
+                            Gerenciamento de jornais.
+                        </p>
+
+                    </div>
 
                 </div>
 
-            </div>
+            </a>
 
         </div>
 
-
         <div class="col-12 col-sm-6 col-lg-3">
 
-            <div class="card shadow-sm border-0 h-100">
+            <a
+                href="/edicoes"
+                class="text-decoration-none"
+            >
 
-                <div class="card-body">
+                <div class="card shadow-sm border-0 h-100">
 
-                    <h2 class="h5">
-                        Edições
-                    </h2>
+                    <div class="card-body">
 
-                    <p class="text-muted small mb-0">
-                        Gerenciamento de edições.
-                    </p>
+                        <h2 class="h5">
+                            Edições
+                        </h2>
+
+                        <p class="text-muted small mb-0">
+                            Gerenciamento de edições.
+                        </p>
+
+                    </div>
 
                 </div>
 
-            </div>
+            </a>
+
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-3">
+
+            <a
+                href="/setores"
+                class="text-decoration-none"
+            >
+
+                <div class="card shadow-sm border-0 h-100">
+
+                    <div class="card-body">
+
+                        <h2 class="h5">
+                            Setores
+                        </h2>
+
+                        <p class="text-muted small mb-0">
+                            Gerenciamento de setores.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </a>
 
         </div>
 
     </div>
 
-
-    <!-- =====================================================
-         MÓDULO DE MATÉRIAS
-         ===================================================== -->
-
-    {% include "materias/lista.html" %}
-
 </div>
-
-{% endblock %}
-
-
-{% block scripts %}
-
-<script
-    src="{{ url_for('static', path='js/materias.js') }}"
-    defer
-></script>
 
 {% endblock %}
