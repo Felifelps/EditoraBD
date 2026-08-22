@@ -1,0 +1,342 @@
+{% extends "base.html" %}
+
+{% block title %}
+
+    {% if materia %}
+        Editar matéria
+    {% else %}
+        Nova matéria
+    {% endif %}
+
+{% endblock %}
+
+{% block content %}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+
+    <div>
+
+        <h1 class="h3 mb-1">
+
+            {% if materia %}
+                Editar matéria
+            {% else %}
+                Nova matéria
+            {% endif %}
+
+        </h1>
+
+        <p class="text-muted mb-0">
+            Preencha os dados da matéria.
+        </p>
+
+    </div>
+
+    <a href="/materias" class="btn btn-outline-secondary">
+        Voltar
+    </a>
+
+</div>
+
+{% if erro %}
+
+<div class="alert alert-danger" role="alert">
+    {{ erro }}
+</div>
+
+{% endif %}
+
+<form
+    method="post"
+    action="{{ acao }}"
+>
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-body">
+
+            <div class="row g-3">
+
+                <div class="col-12">
+
+                    <label
+                        for="titulo"
+                        class="form-label"
+                    >
+                        Título
+                        <span class="text-danger">*</span>
+                    </label>
+
+                    <input
+                        type="text"
+                        id="titulo"
+                        name="titulo"
+                        class="form-control"
+                        required
+                        value="{{ materia.titulo if materia else '' }}"
+                    >
+
+                </div>
+
+                <div class="col-12">
+
+                    <label
+                        for="subtitulo"
+                        class="form-label"
+                    >
+                        Subtítulo
+                    </label>
+
+                    <input
+                        type="text"
+                        id="subtitulo"
+                        name="subtitulo"
+                        class="form-control"
+                        value="{{ materia.subtitulo if materia else '' }}"
+                    >
+
+                </div>
+
+                <div class="col-12">
+
+                    <label
+                        for="resumo"
+                        class="form-label"
+                    >
+                        Resumo
+                    </label>
+
+                    <textarea
+                        id="resumo"
+                        name="resumo"
+                        class="form-control"
+                        rows="4"
+                    >{{ materia.resumo if materia else '' }}</textarea>
+
+                </div>
+
+                <div class="col-12">
+
+                    <label
+                        for="conteudo"
+                        class="form-label"
+                    >
+                        Conteúdo
+                        <span class="text-danger">*</span>
+                    </label>
+
+                    <textarea
+                        id="conteudo"
+                        name="conteudo"
+                        class="form-control"
+                        rows="8"
+                        required
+                    >{{ materia.conteudo if materia else '' }}</textarea>
+
+                </div>
+
+                <div class="col-12 col-md-4">
+
+                    <label
+                        for="data"
+                        class="form-label"
+                    >
+                        Data
+                        <span class="text-danger">*</span>
+                    </label>
+
+                    <input
+                        type="date"
+                        id="data"
+                        name="data"
+                        class="form-control"
+                        required
+                        value="{{ materia.data if materia else '' }}"
+                    >
+
+                </div>
+
+                <div class="col-12 col-md-4">
+
+                    <label
+                        for="status"
+                        class="form-label"
+                    >
+                        Status
+                        <span class="text-danger">*</span>
+                    </label>
+
+                    <select
+                        id="status"
+                        name="status"
+                        class="form-select"
+                        required
+                    >
+
+                        <option
+                            value="0"
+                            {% if not materia or materia.status == 0 %}
+                                selected
+                            {% endif %}
+                        >
+                            Em andamento
+                        </option>
+
+                        <option
+                            value="1"
+                            {% if materia and materia.status == 1 %}
+                                selected
+                            {% endif %}
+                        >
+                            Aprovada
+                        </option>
+
+                        <option
+                            value="2"
+                            {% if materia and materia.status == 2 %}
+                                selected
+                            {% endif %}
+                        >
+                            Reprovada
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="col-12 col-md-4">
+
+                    <label
+                        for="id_setor"
+                        class="form-label"
+                    >
+                        Setor
+                    </label>
+
+                    <select
+                        id="id_setor"
+                        name="id_setor"
+                        class="form-select"
+                    >
+
+                        <option value="">
+                            Selecione um setor
+                        </option>
+
+                        {% for setor in setores %}
+
+                        <option
+                            value="{{ setor.id_setor }}"
+                            {% if materia and materia.id_setor == setor.id_setor %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ setor.nome }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <div class="col-12 col-md-6">
+
+                    <label
+                        for="nome_jornal"
+                        class="form-label"
+                    >
+                        Jornal
+                    </label>
+
+                    <select
+                        id="nome_jornal"
+                        name="nome_jornal"
+                        class="form-select"
+                    >
+
+                        <option value="">
+                            Selecione um jornal
+                        </option>
+
+                        {% for jornal in jornais %}
+
+                        <option
+                            value="{{ jornal.nome_jornal }}"
+                            {% if materia and materia.nome_jornal == jornal.nome_jornal %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ jornal.nome_jornal }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <div class="col-12 col-md-6">
+
+                    <label
+                        for="numero_edicao"
+                        class="form-label"
+                    >
+                        Edição
+                    </label>
+
+                    <select
+                        id="numero_edicao"
+                        name="numero_edicao"
+                        class="form-select"
+                    >
+
+                        <option value="">
+                            Selecione uma edição
+                        </option>
+
+                        {% for edicao in edicoes %}
+
+                        <option
+                            value="{{ edicao.numero_edicao }}"
+                            {% if materia
+                                and materia.numero_edicao == edicao.numero_edicao %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ edicao.numero_edicao }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="card-footer bg-white d-flex justify-content-end gap-2">
+
+            <a
+                href="/materias"
+                class="btn btn-secondary"
+            >
+                Cancelar
+            </a>
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                Salvar
+            </button>
+
+        </div>
+
+    </div>
+
+</form>
+
+{% endblock %}

@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{ materia.titulo }}
+{% endblock %}
+
+{% block content %}
+
+<h1 class="h3 mb-3">
+    {{ materia.titulo }}
+</h1>
+
+<dl class="row">
+
+    <dt class="col-sm-3">ID</dt>
+    <dd class="col-sm-9">{{ materia.id_materia }}</dd>
+
+    <dt class="col-sm-3">Título</dt>
+    <dd class="col-sm-9">{{ materia.titulo }}</dd>
+
+    <dt class="col-sm-3">Subtítulo</dt>
+    <dd class="col-sm-9">{{ materia.subtitulo or "-" }}</dd>
+
+    <dt class="col-sm-3">Resumo</dt>
+    <dd class="col-sm-9">{{ materia.resumo or "-" }}</dd>
+
+    <dt class="col-sm-3">Conteúdo</dt>
+    <dd class="col-sm-9">{{ materia.conteudo }}</dd>
+
+    <dt class="col-sm-3">Data</dt>
+    <dd class="col-sm-9">{{ materia.data or "-" }}</dd>
+
+    <dt class="col-sm-3">Status</dt>
+    <dd class="col-sm-9">
+
+        {% if materia.status == 0 %}
+            Em andamento
+        {% elif materia.status == 1 %}
+            Aprovada
+        {% elif materia.status == 2 %}
+            Reprovada
+        {% else %}
+            -
+        {% endif %}
+
+    </dd>
+
+    <dt class="col-sm-3">Jornal</dt>
+    <dd class="col-sm-9">
+        {{ materia.nome_jornal or "-" }}
+    </dd>
+
+    <dt class="col-sm-3">Edição</dt>
+    <dd class="col-sm-9">
+        {{ materia.numero_edicao or "-" }}
+    </dd>
+
+    <dt class="col-sm-3">Setor</dt>
+    <dd class="col-sm-9">
+        {{ materia.id_setor or "-" }}
+    </dd>
+
+</dl>
+
+<h2 class="h5 mb-3">
+    Jornalistas responsáveis
+</h2>
+
+<form
+    method="post"
+    action="/materias/{{ materia.id_materia }}/jornalistas/alocar"
+    class="row g-3 mb-3"
+>
+
+    <div class="col-md-8">
+
+        <label class="form-label">
+            Jornalista
+        </label>
+
+        <select
+            class="form-select"
+            name="cpf_jornalista"
+            required
+        >
+
+            <option value="">
+                Selecione um jornalista
+            </option>
+
+            {% for jornalista in todos_jornalistas %}
+
+            <option value="{{ jornalista.cpf }}">
+                {{ jornalista.nome }} - {{ jornalista.cpf }}
+            </option>
+
+            {% endfor %}
+
+        </select>
+
+    </div>
+
+    <div class="col-md-4 d-flex align-items-end">
+
+        <button
+            class="btn btn-primary"
+            type="submit"
+        >
+            Alocar
+        </button>
+
+    </div>
+
+</form>
+
+<table class="table table-striped">
+
+    <thead>
+
+        <tr>
+            <th>Jornalista</th>
+            <th>CPF</th>
+            <th></th>
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+        {% for jornalista in jornalistas %}
+
+        <tr>
+
+            <td>
+                {{ jornalista.nome }}
+            </td>
+
+            <td>
+                {{ jornalista.cpf }}
+            </td>
+
+            <td class="text-end">
+
+                <form
+                    method="post"
+                    action="/materias/{{ materia.id_materia }}/jornalistas/{{ jornalista.cpf }}/deletar"
+                    class="d-inline"
+                    onsubmit="return confirm('Desalocar jornalista?');"
+                >
+
+                    <button
+                        class="btn btn-sm btn-outline-danger"
+                        type="submit"
+                    >
+                        Desalocar
+                    </button>
+
+                </form>
+
+            </td>
+
+        </tr>
+
+        {% else %}
+
+        <tr>
+            <td
+                colspan="3"
+                class="text-muted"
+            >
+                Nenhum jornalista alocado.
+            </td>
+        </tr>
+
+        {% endfor %}
+
+    </tbody>
+
+</table>
+
+<a
+    class="btn btn-primary"
+    href="/materias/{{ materia.id_materia }}/editar"
+>
+    Editar
+</a>
+
+<form
+    method="post"
+    action="/materias/{{ materia.id_materia }}/deletar"
+    class="d-inline"
+    onsubmit="return confirm('Excluir matéria?');"
+>
+
+    <button
+        class="btn btn-danger"
+        type="submit"
+    >
+        Excluir
+    </button>
+
+</form>
+
+<a
+    class="btn btn-outline-secondary"
+    href="/materias"
+>
+    Voltar
+</a>
+
+{% endblock %}

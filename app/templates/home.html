@@ -1,6 +1,172 @@
 {% extends "base.html" %}
-{% block title %}Inicio{% endblock %}
+
+{% block title %}
+    Gestão Editorial
+{% endblock %}
+
 {% block content %}
-<h1 class="h3">Gestao Editorial</h1>
-<p class="text-muted">Use o menu acima para navegar entre os cadastros.</p>
+
+<div class="container-fluid">
+
+    <!-- =====================================================
+         CABEÇALHO
+         ===================================================== -->
+
+    <div class="mb-4">
+
+        <h1 class="h3 mb-1">
+            Gestão Editorial
+        </h1>
+
+        <p class="text-muted mb-0">
+            Sistema de gerenciamento editorial.
+        </p>
+
+    </div>
+
+    <!-- =====================================================
+         NAVEGAÇÃO DOS MÓDULOS
+         ===================================================== -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-sm-6 col-lg-3">
+
+            <a
+                href="/materias"
+                class="text-decoration-none"
+            >
+
+                <div class="card shadow-sm border-0 h-100">
+
+                    <div class="card-body">
+
+                        <h2 class="h5">
+                            Matérias
+                        </h2>
+
+                        <p class="text-muted small mb-0">
+                            Criar, consultar, editar e excluir matérias.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-3">
+
+            <a
+                href="/funcionarios"
+                class="text-decoration-none"
+            >
+
+                <div class="card shadow-sm border-0 h-100">
+
+                    <div class="card-body">
+
+                        <h2 class="h5">
+                            Funcionários
+                        </h2>
+
+                        <p class="text-muted small mb-0">
+                            Gerenciamento de funcionários.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-3">
+
+            <a
+                href="/jornais"
+                class="text-decoration-none"
+            >
+
+                <div class="card shadow-sm border-0 h-100">
+
+                    <div class="card-body">
+
+                        <h2 class="h5">
+                            Jornais
+                        </h2>
+
+                        <p class="text-muted small mb-0">
+                            Gerenciamento de jornais.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-3">
+
+            <a
+                href="/edicoes"
+                class="text-decoration-none"
+            >
+
+                <div class="card shadow-sm border-0 h-100">
+
+                    <div class="card-body">
+
+                        <h2 class="h5">
+                            Edições
+                        </h2>
+
+                        <p class="text-muted small mb-0">
+                            Gerenciamento de edições.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-3">
+
+            <a
+                href="/setores"
+                class="text-decoration-none"
+            >
+
+                <div class="card shadow-sm border-0 h-100">
+
+                    <div class="card-body">
+
+                        <h2 class="h5">
+                            Setores
+                        </h2>
+
+                        <p class="text-muted small mb-0">
+                            Gerenciamento de setores.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
 {% endblock %}
