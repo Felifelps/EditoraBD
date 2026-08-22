@@ -1,240 +1,271 @@
 {% extends "base.html" %}
 
 {% block title %}
-    Matérias
+    Materias
 {% endblock %}
 
 {% block content %}
 
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">
+        Materias
+    </h1>
 
-    <div>
-        <h1 class="h3 mb-1">Matérias</h1>
-        <p class="text-muted mb-0">
-            Consulte e gerencie as matérias cadastradas.
-        </p>
-    </div>
-
-    <a href="/materias/novo" class="btn btn-primary">
-        Nova matéria
+    <a
+        class="btn btn-primary"
+        href="/materias/novo"
+    >
+        Nova materia
     </a>
-
 </div>
 
-{% if erro %}
-<div class="alert alert-danger" role="alert">
-    {{ erro }}
-</div>
-{% endif %}
+<form
+    method="get"
+    action="/materias"
+    class="row g-3 mb-4"
+>
 
-<div class="card shadow-sm border-0 mb-4">
+    <div class="col-md-5">
 
-    <div class="card-body">
+        <label
+            for="search"
+            class="form-label"
+        >
+            Busca
+        </label>
 
-        <form method="get" action="/materias" class="row g-3">
+        <input
+            id="search"
+            class="form-control"
+            type="text"
+            name="search"
+            value="{{ search }}"
+            placeholder="Buscar por titulo"
+        >
 
-            <div class="col-12 col-md-6">
+    </div>
 
-                <label for="titulo" class="form-label">
-                    Título
-                </label>
+    <div class="col-md-3">
 
-                <input
-                    type="text"
-                    id="titulo"
-                    name="titulo"
-                    class="form-control"
-                    value="{{ titulo or '' }}"
-                    placeholder="Pesquisar por título"
-                >
+        <label
+            for="status"
+            class="form-label"
+        >
+            Status
+        </label>
 
-            </div>
+        <select
+            id="status"
+            class="form-select"
+            name="status"
+        >
 
-            <div class="col-12 col-md-3">
+            <option
+                value=""
+                {% if status is none %}
+                    selected
+                {% endif %}
+            >
+                Todos
+            </option>
 
-                <label for="status" class="form-label">
-                    Status
-                </label>
+            <option
+                value="0"
+                {% if status == 0 %}
+                    selected
+                {% endif %}
+            >
+                Em andamento
+            </option>
 
-                <select
-                    id="status"
-                    name="status"
-                    class="form-select"
-                >
-                    <option value="">Todos</option>
+            <option
+                value="1"
+                {% if status == 1 %}
+                    selected
+                {% endif %}
+            >
+                Aprovada
+            </option>
 
-                    <option
-                        value="0"
-                        {% if status is not none and status == 0 %}
-                            selected
-                        {% endif %}
-                    >
+            <option
+                value="2"
+                {% if status == 2 %}
+                    selected
+                {% endif %}
+            >
+                Reprovada
+            </option>
+
+        </select>
+
+    </div>
+
+    <div class="col-md-3">
+
+        <label
+            for="setor_id"
+            class="form-label"
+        >
+            Setor
+        </label>
+
+        <select
+            id="setor_id"
+            class="form-select"
+            name="setor_id"
+        >
+
+            <option
+                value=""
+                {% if setor_id is none %}
+                    selected
+                {% endif %}
+            >
+                Todos
+            </option>
+
+            {% for setor in setores %}
+
+            <option
+                value="{{ setor.id_setor }}"
+                {% if setor_id == setor.id_setor %}
+                    selected
+                {% endif %}
+            >
+                {{ setor.nome }}
+            </option>
+
+            {% endfor %}
+
+        </select>
+
+    </div>
+
+    <div class="col-md-1 d-flex align-items-end">
+
+        <button
+            class="btn btn-primary w-100"
+            type="submit"
+        >
+            Filtrar
+        </button>
+
+    </div>
+
+</form>
+
+<div class="table-responsive">
+
+    <table class="table table-striped">
+
+        <thead>
+
+            <tr>
+                <th>ID</th>
+                <th>Titulo</th>
+                <th>Jornal</th>
+                <th>Edicao</th>
+                <th>Data</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {% for materia in materias %}
+
+            <tr>
+
+                <td>
+                    {{ materia.id_materia }}
+                </td>
+
+                <td>
+                    {{ materia.titulo }}
+                </td>
+
+                <td>
+                    {{ materia.nome_jornal or "-" }}
+                </td>
+
+                <td>
+                    {{ materia.numero_edicao or "-" }}
+                </td>
+
+                <td>
+                    {{ materia.data or "-" }}
+                </td>
+
+                <td>
+
+                    {% if materia.status == 0 %}
                         Em andamento
-                    </option>
-
-                    <option
-                        value="1"
-                        {% if status is not none and status == 1 %}
-                            selected
-                        {% endif %}
-                    >
+                    {% elif materia.status == 1 %}
                         Aprovada
-                    </option>
-
-                    <option
-                        value="2"
-                        {% if status is not none and status == 2 %}
-                            selected
-                        {% endif %}
-                    >
+                    {% elif materia.status == 2 %}
                         Reprovada
-                    </option>
-
-                </select>
-
-            </div>
-
-            <div class="col-12 col-md-3 d-flex align-items-end">
-
-                <button
-                    type="submit"
-                    class="btn btn-dark w-100"
-                >
-                    Filtrar
-                </button>
-
-            </div>
-
-        </form>
-
-    </div>
-
-</div>
-
-<div class="card shadow-sm border-0">
-
-    <div class="card-body">
-
-        <div class="table-responsive">
-
-            <table class="table table-hover align-middle">
-
-                <thead class="table-light">
-
-                    <tr>
-                        <th>ID</th>
-                        <th>Título</th>
-                        <th>Jornal</th>
-                        <th>Edição</th>
-                        <th>Setor</th>
-                        <th>Data</th>
-                        <th>Status</th>
-                        <th class="text-end">Ações</th>
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    {% for materia in materias %}
-
-                    <tr>
-
-                        <td>
-                            {{ materia.id_materia }}
-                        </td>
-
-                        <td>
-                            {{ materia.titulo }}
-                        </td>
-
-                        <td>
-                            {{ materia.nome_jornal or "-" }}
-                        </td>
-
-                        <td>
-                            {{ materia.numero_edicao or "-" }}
-                        </td>
-
-                        <td>
-                            {{ materia.id_setor or "-" }}
-                        </td>
-
-                        <td>
-                            {{ materia.data }}
-                        </td>
-
-                        <td>
-
-                            {% if materia.status == 0 %}
-                                Em andamento
-                            {% elif materia.status == 1 %}
-                                Aprovada
-                            {% elif materia.status == 2 %}
-                                Reprovada
-                            {% else %}
-                                -
-                            {% endif %}
-
-                        </td>
-
-                        <td class="text-end">
-
-                            <a
-                                href="/materias/{{ materia.id_materia }}"
-                                class="btn btn-sm btn-outline-primary"
-                            >
-                                Detalhes
-                            </a>
-
-                            <a
-                                href="/materias/{{ materia.id_materia }}/editar"
-                                class="btn btn-sm btn-outline-secondary"
-                            >
-                                Editar
-                            </a>
-
-                            <form
-                                method="post"
-                                action="/materias/{{ materia.id_materia }}/deletar"
-                                class="d-inline"
-                            >
-
-                                <button
-                                    type="submit"
-                                    class="btn btn-sm btn-outline-danger"
-                                >
-                                    Excluir
-                                </button>
-
-                            </form>
-
-                        </td>
-
-                    </tr>
-
                     {% else %}
+                        -
+                    {% endif %}
 
-                    <tr>
+                </td>
 
-                        <td
-                            colspan="8"
-                            class="text-center text-muted py-5"
+                <td class="text-end">
+
+                    <a
+                        class="btn btn-sm btn-outline-secondary"
+                        href="/materias/{{ materia.id_materia }}"
+                    >
+                        Ver
+                    </a>
+
+                    <a
+                        class="btn btn-sm btn-outline-secondary"
+                        href="/materias/{{ materia.id_materia }}/editar"
+                    >
+                        Editar
+                    </a>
+
+                    <form
+                        method="post"
+                        action="/materias/{{ materia.id_materia }}/deletar"
+                        class="d-inline"
+                        onsubmit="return confirm('Excluir materia?');"
+                    >
+
+                        <button
+                            class="btn btn-sm btn-outline-danger"
+                            type="submit"
                         >
-                            Nenhuma matéria encontrada.
-                        </td>
+                            Excluir
+                        </button>
 
-                    </tr>
+                    </form>
 
-                    {% endfor %}
+                </td>
 
-                </tbody>
+            </tr>
 
-            </table>
+            {% else %}
 
-        </div>
+            <tr>
 
-    </div>
+                <td
+                    colspan="7"
+                    class="text-muted"
+                >
+                    Nenhuma materia cadastrada.
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
 
 </div>
 

@@ -31,24 +31,60 @@ router = APIRouter(prefix="/materias")
 def listar(
     request: Request,
     search: str | None = Query(None),
-    status: int | None = Query(None),
-    setor_id: int | None = Query(None),
+    status: str | None = Query(None),
+    setor_id: str | None = Query(None),
     service: MateriaService = Depends(get_materia_service),
     setor_service: SetorService = Depends(get_setor_service),
 ):
+    search_filtro = search.strip() if search else None
+    status_filtro = None
+    setor_filtro = None
+
+    if status:
+        try:
+            status_filtro = int(status)
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="Status inválido.",
+            )
+
+        if status_filtro not in (0, 1, 2):
+            raise HTTPException(
+                status_code=400,
+                detail="Status inválido.",
+            )
+
+    if setor_id:
+        try:
+            setor_filtro = int(setor_id)
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="Setor inválido.",
+            )
+
+        if setor_filtro <= 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Setor inválido.",
+            )
+
+    materias = service.listar(
+        search=search_filtro,
+        status=status_filtro,
+        setor_id=setor_filtro,
+    )
+
     return templates.TemplateResponse(
         request,
         "materias/list.html",
         {
-            "materias": service.listar(
-                search=search,
-                status=status,
-                setor_id=setor_id,
-            ),
+            "materias": materias,
             "setores": setor_service.listar(),
-            "search": search or "",
-            "status": status,
-            "setor_id": setor_id,
+            "search": search_filtro or "",
+            "status": status_filtro,
+            "setor_id": setor_filtro,
         },
     )
 
@@ -59,6 +95,9 @@ def form_novo(
     setor_service: SetorService = Depends(get_setor_service),
     jornal_service: JornalService = Depends(get_jornal_service),
     edicao_service: EdicaoService = Depends(get_edicao_service),
+    funcionario_service: FuncionarioService = Depends(
+        get_funcionario_service
+    ),
 ):
     return templates.TemplateResponse(
         request,
@@ -70,6 +109,7 @@ def form_novo(
             "setores": setor_service.listar(),
             "jornais": jornal_service.listar(),
             "edicoes": edicao_service.listar(),
+            "jornalistas": funcionario_service.listar(),
         },
     )
 
@@ -90,6 +130,9 @@ def criar(
     setor_service: SetorService = Depends(get_setor_service),
     jornal_service: JornalService = Depends(get_jornal_service),
     edicao_service: EdicaoService = Depends(get_edicao_service),
+    funcionario_service: FuncionarioService = Depends(
+        get_funcionario_service
+    ),
 ):
     try:
         dados = MateriaCriar(
@@ -117,6 +160,7 @@ def criar(
                 "setores": setor_service.listar(),
                 "jornais": jornal_service.listar(),
                 "edicoes": edicao_service.listar(),
+                "jornalistas": funcionario_service.listar(),
             },
             status_code=400,
         )
@@ -201,6 +245,9 @@ def form_editar(
     setor_service: SetorService = Depends(get_setor_service),
     jornal_service: JornalService = Depends(get_jornal_service),
     edicao_service: EdicaoService = Depends(get_edicao_service),
+    funcionario_service: FuncionarioService = Depends(
+        get_funcionario_service
+    ),
 ):
     try:
         materia = service.obter_por_id(id_materia)
@@ -220,6 +267,7 @@ def form_editar(
             "setores": setor_service.listar(),
             "jornais": jornal_service.listar(),
             "edicoes": edicao_service.listar(),
+            "jornalistas": funcionario_service.listar(),
         },
     )
 
@@ -241,6 +289,9 @@ def atualizar(
     setor_service: SetorService = Depends(get_setor_service),
     jornal_service: JornalService = Depends(get_jornal_service),
     edicao_service: EdicaoService = Depends(get_edicao_service),
+    funcionario_service: FuncionarioService = Depends(
+        get_funcionario_service
+    ),
 ):
     try:
         dados = MateriaAtualizar(
@@ -285,6 +336,7 @@ def atualizar(
                 "setores": setor_service.listar(),
                 "jornais": jornal_service.listar(),
                 "edicoes": edicao_service.listar(),
+                "jornalistas": funcionario_service.listar(),
             },
             status_code=400,
         )
@@ -319,44 +371,7 @@ def alocar_jornalista(
     id_materia: int,
     cpf_jornalista: str = Form(...),
     service: MateriaService = Depends(get_materia_service),
-    funcionario_service: FuncionarioService = Depends(
-        get_funcionario_service
-    ),
 ):
-    try:
-        service.obter_por_id(id_materia)
-    except MateriaNaoEncontradaError as exc:
-        raise HTTPException(
-            status_code=404,
-            detail=str(exc),
-        ) from exc
-
-    funcionarios = funcionario_service.listar()
-
-    jornalista = next(
-        (
-            funcionario
-            for funcionario in funcionarios
-            if getattr(
-                funcionario,
-                "cpf",
-                None,
-            ) == cpf_jornalista
-            and getattr(
-                funcionario,
-                "tipo",
-                None,
-            ) == "jornalista"
-        ),
-        None,
-    )
-
-    if jornalista is None:
-        raise HTTPException(
-            status_code=400,
-            detail="O CPF informado não pertence a um jornalista.",
-        )
-
     try:
         service.vincular_jornalista(
             id_materia,
