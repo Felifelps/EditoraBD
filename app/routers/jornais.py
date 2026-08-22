@@ -1,362 +1,97 @@
-from datetime import date
-
-from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
-from pydantic import ValidationError
 
-from app.exceptions.materias import MateriaNaoEncontradaError
-from app.schemas.materias import MateriaAtualizar, MateriaCriar
-from app.services.edicoes import EdicaoService, get_edicao_service
-from app.services.funcionarios import (
-    FuncionarioService,
-    get_funcionario_service,
-)
+from app.exceptions.jornais import JornalJaExisteError, JornalNaoEncontradoError
+from app.schemas.jornal import JornalCreate, JornalUpdate
 from app.services.jornais import JornalService, get_jornal_service
-from app.services.materias import MateriaService, get_materia_service
-from app.services.setores import SetorService, get_setor_service
 from app.templating import templates
 
-
-router = APIRouter(prefix="/materias")
+router = APIRouter(prefix="/jornais")
 
 
 @router.get("")
-def listar(
-    request: Request,
-    search: str | None = Query(None),
-    status: int | None = Query(None),
-    setor_id: int | None = Query(None),
-    service: MateriaService = Depends(get_materia_service),
-    setor_service: SetorService = Depends(get_setor_service),
-):
-    return templates.TemplateResponse(
-        request,
-        "materias/list.html",
-        {
-            "materias": service.listar(
-                search=search,
-                status=status,
-                setor_id=setor_id,
-            ),
-            "setores": setor_service.listar(),
-            "search": search or "",
-            "status": status,
-            "setor_id": setor_id,
-        },
-    )
+def listar(request: Request, service: JornalService = Depends(get_jornal_service)):
+    return templates.TemplateResponse(request, "jornais/list.html", {"jornais": service.listar()})
 
 
 @router.get("/novo")
-def form_novo(
-    request: Request,
-    setor_service: SetorService = Depends(get_setor_service),
-    jornal_service: JornalService = Depends(get_jornal_service),
-    edicao_service: EdicaoService = Depends(get_edicao_service),
-    funcionario_service: FuncionarioService = Depends(
-        get_funcionario_service
-    ),
-):
+def form_novo(request: Request, service: JornalService = Depends(get_jornal_service)):
     return templates.TemplateResponse(
         request,
-        "materias/form.html",
-        {
-            "erro": None,
-            "materia": None,
-            "acao": "/materias/novo",
-            "setores": setor_service.listar(),
-            "jornais": jornal_service.listar(),
-            "edicoes": edicao_service.listar(),
-            "jornalistas": funcionario_service.listar(),
-        },
+        "jornais/form.html",
+        {"erro": None, "jornal": None, "acao": "/jornais/novo", "diretores": service.listar_diretores()},
     )
 
 
 @router.post("/novo")
 def criar(
     request: Request,
-    titulo: str = Form(...),
-    subtitulo: str = Form(""),
-    resumo: str = Form(""),
-    conteudo: str = Form(...),
-    data: str = Form(...),
-    status: int = Form(...),
-    nome_jornal: str = Form(""),
-    numero_edicao: int | None = Form(None),
-    id_setor: int | None = Form(None),
-    service: MateriaService = Depends(get_materia_service),
-    setor_service: SetorService = Depends(get_setor_service),
-    jornal_service: JornalService = Depends(get_jornal_service),
-    edicao_service: EdicaoService = Depends(get_edicao_service),
-    funcionario_service: FuncionarioService = Depends(
-        get_funcionario_service
-    ),
+    nome_jornal: str = Form(...),
+    cpf_diretor: str = Form(""),
+    service: JornalService = Depends(get_jornal_service),
 ):
+    dados = JornalCreate(nome_jornal=nome_jornal, cpf_diretor=cpf_diretor or None)
     try:
-        dados = MateriaCriar(
-            titulo=titulo,
-            subtitulo=subtitulo or None,
-            resumo=resumo or None,
-            conteudo=conteudo,
-            data=date.fromisoformat(data),
-            status=status,
-            nome_jornal=nome_jornal or None,
-            numero_edicao=numero_edicao,
-            id_setor=id_setor,
-        )
-
         service.criar(dados)
-
-    except (ValueError, ValidationError) as exc:
+    except JornalJaExisteError as exc:
         return templates.TemplateResponse(
             request,
-            "materias/form.html",
+            "jornais/form.html",
             {
                 "erro": str(exc),
-                "materia": None,
-                "acao": "/materias/novo",
-                "setores": setor_service.listar(),
-                "jornais": jornal_service.listar(),
-                "edicoes": edicao_service.listar(),
-                "jornalistas": funcionario_service.listar(),
+                "jornal": None,
+                "acao": "/jornais/novo",
+                "diretores": service.listar_diretores(),
             },
-            status_code=400,
+            status_code=409,
         )
-
-    return RedirectResponse(
-        url="/materias",
-        status_code=303,
-    )
+    return RedirectResponse(url="/jornais", status_code=303)
 
 
-@router.get("/{id_materia}")
-def detalhar(
-    request: Request,
-    id_materia: int,
-    service: MateriaService = Depends(get_materia_service),
-    funcionario_service: FuncionarioService = Depends(
-        get_funcionario_service
-    ),
-):
-    try:
-        materia = service.obter_por_id(id_materia)
-        alocados = service.listar_jornalistas(id_materia)
-    except MateriaNaoEncontradaError as exc:
-        raise HTTPException(
-            status_code=404,
-            detail=str(exc),
-        ) from exc
+@router.get("/{nome_jornal}")
+def detalhar(request: Request, nome_jornal: str, service: JornalService = Depends(get_jornal_service)):
+    jornal = service.buscar(nome_jornal)
+    if jornal is None:
+        raise HTTPException(status_code=404, detail="Jornal nao encontrado")
+    return templates.TemplateResponse(request, "jornais/detail.html", {"jornal": jornal})
 
-    funcionarios = funcionario_service.listar()
 
-    jornalistas = []
-
-    for alocado in alocados:
-        cpf = alocado["cpf_jornalista"]
-
-        jornalista = next(
-            (
-                funcionario
-                for funcionario in funcionarios
-                if getattr(funcionario, "cpf", None) == cpf
-            ),
-            None,
-        )
-
-        jornalistas.append(
-            {
-                "cpf": cpf,
-                "nome": getattr(
-                    jornalista,
-                    "nome",
-                    cpf,
-                ),
-            }
-        )
-
+@router.get("/{nome_jornal}/editar")
+def form_editar(request: Request, nome_jornal: str, service: JornalService = Depends(get_jornal_service)):
+    jornal = service.buscar(nome_jornal)
+    if jornal is None:
+        raise HTTPException(status_code=404, detail="Jornal nao encontrado")
     return templates.TemplateResponse(
         request,
-        "materias/detail.html",
-        {
-            "materia": materia,
-            "jornalistas": jornalistas,
-            "todos_jornalistas": funcionarios,
-        },
-    )
-
-
-@router.get("/{id_materia}/editar")
-def form_editar(
-    request: Request,
-    id_materia: int,
-    service: MateriaService = Depends(get_materia_service),
-    setor_service: SetorService = Depends(get_setor_service),
-    jornal_service: JornalService = Depends(get_jornal_service),
-    edicao_service: EdicaoService = Depends(get_edicao_service),
-    funcionario_service: FuncionarioService = Depends(
-        get_funcionario_service
-    ),
-):
-    try:
-        materia = service.obter_por_id(id_materia)
-    except MateriaNaoEncontradaError as exc:
-        raise HTTPException(
-            status_code=404,
-            detail=str(exc),
-        ) from exc
-
-    return templates.TemplateResponse(
-        request,
-        "materias/form.html",
+        "jornais/form.html",
         {
             "erro": None,
-            "materia": materia,
-            "acao": f"/materias/{id_materia}/editar",
-            "setores": setor_service.listar(),
-            "jornais": jornal_service.listar(),
-            "edicoes": edicao_service.listar(),
-            "jornalistas": funcionario_service.listar(),
+            "jornal": jornal,
+            "acao": f"/jornais/{nome_jornal}/editar",
+            "diretores": service.listar_diretores(),
         },
     )
 
 
-@router.post("/{id_materia}/editar")
+@router.post("/{nome_jornal}/editar")
 def atualizar(
     request: Request,
-    id_materia: int,
-    titulo: str = Form(...),
-    subtitulo: str = Form(""),
-    resumo: str = Form(""),
-    conteudo: str = Form(...),
-    data: str = Form(...),
-    status: int = Form(...),
-    nome_jornal: str = Form(""),
-    numero_edicao: int | None = Form(None),
-    id_setor: int | None = Form(None),
-    service: MateriaService = Depends(get_materia_service),
-    setor_service: SetorService = Depends(get_setor_service),
-    jornal_service: JornalService = Depends(get_jornal_service),
-    edicao_service: EdicaoService = Depends(get_edicao_service),
-    funcionario_service: FuncionarioService = Depends(
-        get_funcionario_service
-    ),
+    nome_jornal: str,
+    cpf_diretor: str = Form(""),
+    service: JornalService = Depends(get_jornal_service),
 ):
+    dados = JornalUpdate(cpf_diretor=cpf_diretor or None)
     try:
-        dados = MateriaAtualizar(
-            titulo=titulo,
-            subtitulo=subtitulo or None,
-            resumo=resumo or None,
-            conteudo=conteudo,
-            data=date.fromisoformat(data),
-            status=status,
-            nome_jornal=nome_jornal or None,
-            numero_edicao=numero_edicao,
-            id_setor=id_setor,
-        )
-
-        service.atualizar(
-            id_materia,
-            dados,
-        )
-
-    except MateriaNaoEncontradaError as exc:
-        raise HTTPException(
-            status_code=404,
-            detail=str(exc),
-        ) from exc
-
-    except (ValueError, ValidationError) as exc:
-        try:
-            materia = service.obter_por_id(id_materia)
-        except MateriaNaoEncontradaError as materia_exc:
-            raise HTTPException(
-                status_code=404,
-                detail=str(materia_exc),
-            ) from materia_exc
-
-        return templates.TemplateResponse(
-            request,
-            "materias/form.html",
-            {
-                "erro": str(exc),
-                "materia": materia,
-                "acao": f"/materias/{id_materia}/editar",
-                "setores": setor_service.listar(),
-                "jornais": jornal_service.listar(),
-                "edicoes": edicao_service.listar(),
-                "jornalistas": funcionario_service.listar(),
-            },
-            status_code=400,
-        )
-
-    return RedirectResponse(
-        url=f"/materias/{id_materia}",
-        status_code=303,
-    )
+        service.atualizar(nome_jornal, dados)
+    except JornalNaoEncontradoError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return RedirectResponse(url=f"/jornais/{nome_jornal}", status_code=303)
 
 
-@router.post("/{id_materia}/deletar")
-def deletar(
-    id_materia: int,
-    service: MateriaService = Depends(get_materia_service),
-):
+@router.post("/{nome_jornal}/deletar")
+def deletar(nome_jornal: str, service: JornalService = Depends(get_jornal_service)):
     try:
-        service.deletar(id_materia)
-    except MateriaNaoEncontradaError as exc:
-        raise HTTPException(
-            status_code=404,
-            detail=str(exc),
-        ) from exc
-
-    return RedirectResponse(
-        url="/materias",
-        status_code=303,
-    )
-
-
-@router.post("/{id_materia}/jornalistas/alocar")
-def alocar_jornalista(
-    id_materia: int,
-    cpf_jornalista: str = Form(...),
-    service: MateriaService = Depends(get_materia_service),
-):
-    try:
-        service.vincular_jornalista(
-            id_materia,
-            cpf_jornalista,
-        )
-    except MateriaNaoEncontradaError as exc:
-        raise HTTPException(
-            status_code=404,
-            detail=str(exc),
-        ) from exc
-
-    return RedirectResponse(
-        url=f"/materias/{id_materia}",
-        status_code=303,
-    )
-
-
-@router.post(
-    "/{id_materia}/jornalistas/"
-    "{cpf_jornalista}/deletar"
-)
-def desalocar_jornalista(
-    id_materia: int,
-    cpf_jornalista: str,
-    service: MateriaService = Depends(get_materia_service),
-):
-    try:
-        service.desvincular_jornalista(
-            id_materia,
-            cpf_jornalista,
-        )
-    except MateriaNaoEncontradaError as exc:
-        raise HTTPException(
-            status_code=404,
-            detail=str(exc),
-        ) from exc
-
-    return RedirectResponse(
-        url=f"/materias/{id_materia}",
-        status_code=303,
-    )
+        service.deletar(nome_jornal)
+    except JornalNaoEncontradoError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return RedirectResponse(url="/jornais", status_code=303)
