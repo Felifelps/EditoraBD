@@ -1,5 +1,5 @@
-# Imagem oficial leve do Python
-FROM python:3.11-slim
+# Imagem oficial leve do Python (pyproject.toml exige requires-python >= 3.12)
+FROM python:3.12-slim
 
 # Copia o binário do uv diretamente da imagem oficial (multistage build)
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
