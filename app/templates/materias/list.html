@@ -70,7 +70,7 @@
                     selected
                 {% endif %}
             >
-                Em andamento
+                Reprovada
             </option>
 
             <option
@@ -88,7 +88,7 @@
                     selected
                 {% endif %}
             >
-                Reprovada
+                Em andamento
             </option>
         </select>
     </div>
@@ -177,11 +177,11 @@
 
                 <td>
                     {% if materia.status == 0 %}
-                        Em andamento
+                        Reprovada
                     {% elif materia.status == 1 %}
                         Aprovada
                     {% elif materia.status == 2 %}
-                        Reprovada
+                        Em andamento
                     {% else %}
                         -
                     {% endif %}

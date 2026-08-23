@@ -34,11 +34,11 @@
     <dd class="col-sm-9">
 
         {% if materia.status == 0 %}
-            Em andamento
+            Reprovada
         {% elif materia.status == 1 %}
             Aprovada
         {% elif materia.status == 2 %}
-            Reprovada
+            Em andamento
         {% else %}
             -
         {% endif %}
