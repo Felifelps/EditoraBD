@@ -11,6 +11,7 @@ from app.routers import (
     funcionarios,
     jornais,
     materias,
+    relatorios,
     setores,
 )
 from app.templating import templates
@@ -48,6 +49,7 @@ app.include_router(materias.router)
 app.include_router(jornais.router)
 app.include_router(edicoes.router)
 app.include_router(setores.router)
+app.include_router(relatorios.router)
 
 
 @app.get("/")
