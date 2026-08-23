@@ -7,8 +7,8 @@ SELECT
     COUNT(e.numero_edicao) AS total_edicoes,
     MAX(e.data) AS ultima_edicao
 FROM jornal j
-JOIN diretor d ON j.cpf_diretor = d.cpf_diretor
-JOIN funcionario f ON d.cpf_diretor = f.cpf
+LEFT JOIN diretor d ON j.cpf_diretor = d.cpf_diretor
+LEFT JOIN funcionario f ON d.cpf_diretor = f.cpf
 LEFT JOIN edicao e ON j.nome_jornal = e.nome_jornal
 GROUP BY j.nome_jornal, f.nome;
 
@@ -84,8 +84,8 @@ SELECT
     e.nome_jornal,
     STRING_AGG(f.nome, ', ') AS autores
 FROM materia m
-JOIN setor s ON m.id_setor = s.id_setor
-JOIN edicao e ON m.nome_jornal = e.nome_jornal AND m.numero_edicao = e.numero_edicao
+LEFT JOIN setor s ON m.id_setor = s.id_setor
+LEFT JOIN edicao e ON m.nome_jornal = e.nome_jornal AND m.numero_edicao = e.numero_edicao
 LEFT JOIN alocacao_jornalista_materia ajm ON m.id_materia = ajm.id_materia
 LEFT JOIN jornalista j ON ajm.cpf_jornalista = j.cpf_jornalista
 LEFT JOIN funcionario f ON j.cpf_jornalista = f.cpf
