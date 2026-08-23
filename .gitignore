@@ -1,3 +1,2 @@
-**/.venv.venv_local/
-
-.venv_local
+.venv/
+.venv_local/
