@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, Request
 from psycopg import Connection
 
@@ -7,12 +9,14 @@ from app.templating import templates
 
 
 router = APIRouter(prefix="/relatorios")
+logger = logging.getLogger(__name__)
 
 
 def _consultar(repo: RelatorioRepository, consulta):
     try:
         return consulta(), None
     except Exception:
+        logger.exception("Falha ao consultar relatorio")
         repo.conn.rollback()
         return [], "Nao foi possivel carregar este relatorio. Tente novamente."
 
