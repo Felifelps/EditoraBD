@@ -126,6 +126,33 @@ VALUES
     ('10000000035', '10019-PE');
 
 -- ============================================================
+-- POVOAMENTO: JORNALISTA (base dos editores-chefe)
+-- Quantidade: 15 tuplas
+--
+-- Editor_Chefe agora especializa Jornalista (ver 0001_create_tables.sql), entao
+-- todo CPF que sera editor-chefe precisa antes existir como jornalista.
+-- ============================================================
+
+INSERT INTO jornalista
+    (cpf_jornalista, mtb)
+VALUES
+    ('10000000036', '10020-PE'),
+    ('10000000037', '10021-PE'),
+    ('10000000038', '10022-PE'),
+    ('10000000039', '10023-PE'),
+    ('10000000040', '10024-PE'),
+    ('10000000041', '10025-PE'),
+    ('10000000042', '10026-PE'),
+    ('10000000043', '10027-PE'),
+    ('10000000044', '10028-PE'),
+    ('10000000045', '10029-PE'),
+    ('10000000046', '10030-PE'),
+    ('10000000047', '10031-PE'),
+    ('10000000048', '10032-PE'),
+    ('10000000049', '10033-PE'),
+    ('10000000050', '10034-PE');
+
+-- ============================================================
 -- POVOAMENTO: EDITOR_CHEFE
 -- Quantidade: 15 tuplas
 -- ============================================================
@@ -316,10 +343,10 @@ VALUES
 -- POVOAMENTO: MATERIA
 -- Quantidade: 60 tuplas
 --
--- STATUS:
--- 0 = EM_ANDAMENTO
+-- STATUS (conforme Dicionario de Dados):
+-- 0 = REPROVADA
 -- 1 = APROVADA
--- 2 = REPROVADA
+-- 2 = EM_ANDAMENTO
 -- ============================================================
 
 INSERT INTO materia
@@ -988,7 +1015,11 @@ VALUES
 
 -- ============================================================
 -- POVOAMENTO: ALOCACAO_JORNALISTA_MATERIA
--- Quantidade: 60 tuplas
+-- Quantidade: 61 tuplas
+--
+-- A ultima tupla usa o CPF de um editor-chefe (10000000036) para demonstrar que,
+-- com Editor_Chefe agora especializando Jornalista, um editor-chefe pode assinar
+-- materias como autor, algo impossivel na modelagem anterior.
 -- ============================================================
 
 INSERT INTO alocacao_jornalista_materia
@@ -1053,4 +1084,5 @@ VALUES
     ('10000000032', 57),
     ('10000000033', 58),
     ('10000000034', 59),
-    ('10000000035', 60);
+    ('10000000035', 60),
+    ('10000000036', 1);

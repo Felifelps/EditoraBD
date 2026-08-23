@@ -5,25 +5,22 @@ from app.schemas.funcionario import Funcionario, FuncionarioCreate, FuncionarioU
 
 # "tipo" nao e coluna de funcionario: e derivado de qual subtabela
 # (diretor/jornalista/editor_chefe) contem o CPF, conforme a especializacao do esquema.
+# editor_chefe especializa jornalista (nao funcionario diretamente), entao um CPF la
+# tambem existe em jornalista; a checagem de editor_chefe vem antes para reportar o
+# tipo mais especifico.
 SELECT_COM_TIPO = """
     SELECT f.cpf, f.nome, f.rua, f.cep, f.numero, f.data_nascimento,
            f.email, f.telefone, f.salario,
            CASE
                WHEN d.cpf_diretor IS NOT NULL THEN 'diretor'
-               WHEN j.cpf_jornalista IS NOT NULL THEN 'jornalista'
                WHEN e.cpf_editor IS NOT NULL THEN 'editor_chefe'
+               WHEN j.cpf_jornalista IS NOT NULL THEN 'jornalista'
            END AS tipo
     FROM funcionario f
     LEFT JOIN diretor d ON d.cpf_diretor = f.cpf
     LEFT JOIN jornalista j ON j.cpf_jornalista = f.cpf
     LEFT JOIN editor_chefe e ON e.cpf_editor = f.cpf
 """
-
-TABELA_POR_TIPO = {
-    "diretor": ("diretor", "cpf_diretor"),
-    "jornalista": ("jornalista", "cpf_jornalista"),
-    "editor_chefe": ("editor_chefe", "cpf_editor"),
-}
 
 
 class FuncionarioRepository:
@@ -41,17 +38,30 @@ class FuncionarioRepository:
             return cur.fetchone()
 
     def _definir_tipo(self, cpf: str, tipo: str) -> None:
-        """Move o CPF para a subtabela de especializacao correta, removendo-o das demais."""
-        tabela_alvo, _ = TABELA_POR_TIPO[tipo]
-        for tabela, coluna in TABELA_POR_TIPO.values():
-            if tabela != tabela_alvo:
-                self.conn.execute(f"DELETE FROM {tabela} WHERE {coluna} = %s", (cpf,))
+        """Move o CPF para a subtabela de especializacao correta, removendo-o das demais.
 
-        _, coluna_alvo = TABELA_POR_TIPO[tipo]
+        editor_chefe especializa jornalista (nao funcionario diretamente): definir
+        tipo="editor_chefe" exige que a linha em jornalista exista antes do insert em
+        editor_chefe, por causa da FK encadeada.
+        """
+        self.conn.execute("DELETE FROM diretor WHERE cpf_diretor = %s", (cpf,))
+
+        if tipo == "diretor":
+            self.conn.execute("DELETE FROM jornalista WHERE cpf_jornalista = %s", (cpf,))
+            self.conn.execute(
+                "INSERT INTO diretor (cpf_diretor) VALUES (%s) ON CONFLICT DO NOTHING", (cpf,)
+            )
+            return
+
         self.conn.execute(
-            f"INSERT INTO {tabela_alvo} ({coluna_alvo}) VALUES (%s) ON CONFLICT DO NOTHING",
-            (cpf,),
+            "INSERT INTO jornalista (cpf_jornalista) VALUES (%s) ON CONFLICT DO NOTHING", (cpf,)
         )
+        if tipo == "editor_chefe":
+            self.conn.execute(
+                "INSERT INTO editor_chefe (cpf_editor) VALUES (%s) ON CONFLICT DO NOTHING", (cpf,)
+            )
+        else:
+            self.conn.execute("DELETE FROM editor_chefe WHERE cpf_editor = %s", (cpf,))
 
     def criar(self, dados: FuncionarioCreate) -> Funcionario:
         with self.conn.transaction():

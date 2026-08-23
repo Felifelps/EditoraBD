@@ -13,8 +13,11 @@ CREATE TABLE IF NOT EXISTS funcionario (
     data_nascimento  DATE,
     email            VARCHAR(100) UNIQUE NOT NULL,
     telefone         VARCHAR(15),
-    salario          DECIMAL(10,2),
-    idade            INT
+    salario          DECIMAL(10,2) CHECK (salario >= 0),
+    idade            INT,
+
+    CONSTRAINT ck_funcionario_data_nascimento
+        CHECK (data_nascimento <= CURRENT_DATE)
 );
 
 -- DIRETOR (subtipo de Funcionario)
@@ -25,7 +28,10 @@ CREATE TABLE IF NOT EXISTS diretor (
     CONSTRAINT fk_diretor_funcionario
         FOREIGN KEY (cpf_diretor)
         REFERENCES funcionario(cpf)
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+
+    CONSTRAINT ck_diretor_data_inicio_mandato
+        CHECK (data_inicio_mandato <= CURRENT_DATE)
 );
 
 -- JORNALISTA (subtipo de Funcionario)
@@ -39,13 +45,16 @@ CREATE TABLE IF NOT EXISTS jornalista (
         ON DELETE CASCADE
 );
 
--- EDITOR_CHEFE (subtipo de Funcionario)
+-- EDITOR_CHEFE (subtipo de Jornalista — todo editor-chefe e, por definicao, um
+-- jornalista, entao a hierarquia de especializacao e encadeada em vez de disjunta
+-- a partir de Funcionario. Isso permite que um editor-chefe assine materias como
+-- autor via alocacao_jornalista_materia, que referencia jornalista.cpf_jornalista)
 CREATE TABLE IF NOT EXISTS editor_chefe (
     cpf_editor  VARCHAR(11) PRIMARY KEY,
 
-    CONSTRAINT fk_editor_chefe_funcionario
+    CONSTRAINT fk_editor_chefe_jornalista
         FOREIGN KEY (cpf_editor)
-        REFERENCES funcionario(cpf)
+        REFERENCES jornalista(cpf_jornalista)
         ON DELETE CASCADE
 );
 
@@ -105,7 +114,8 @@ CREATE TABLE IF NOT EXISTS materia (
     resumo          TEXT,
     conteudo        TEXT,
     data            DATE,
-    status          INT,
+    -- status conforme Dicionario de Dados: 0 = Reprovada, 1 = Aprovada, 2 = Em Andamento
+    status          INT NOT NULL DEFAULT 2 CHECK (status IN (0, 1, 2)),
     nome_jornal     VARCHAR(100),
     numero_edicao   INT,
     id_setor        INT,
