@@ -6,23 +6,26 @@
 
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0">
-        Materias
-    </h1>
+<div class="page-header">
+    <div>
+        <h1 class="h3">Matérias</h1>
+        <p class="text-muted mb-0">Gerencie as matérias em produção e já publicadas.</p>
+    </div>
 
     <a
         class="btn btn-primary"
         href="/materias/novo"
     >
-        Nova materia
+        + Nova matéria
     </a>
 </div>
 
+<div class="card shadow-sm border-0 mb-3">
+<div class="card-body">
 <form
     method="get"
     action="/materias"
-    class="row g-3 mb-4"
+    class="row g-3"
 >
     <div class="col-md-5">
         <label
@@ -137,10 +140,15 @@
         </button>
     </div>
 </form>
+</div>
+</div>
 
+<div class="card shadow-sm border-0">
+<div class="card-body p-0">
+{% if materias %}
 <div class="table-responsive">
-    <table class="table table-striped">
-        <thead>
+    <table class="table table-striped table-hover align-middle mb-0">
+        <thead class="table-light">
             <tr>
                 <th>ID</th>
                 <th>Titulo</th>
@@ -177,13 +185,13 @@
 
                 <td>
                     {% if materia.status == 0 %}
-                        Reprovada
+                        <span class="status-badge status-reprovada">Reprovada</span>
                     {% elif materia.status == 1 %}
-                        Aprovada
+                        <span class="status-badge status-aprovada">Aprovada</span>
                     {% elif materia.status == 2 %}
-                        Em andamento
+                        <span class="status-badge status-em-andamento">Em andamento</span>
                     {% else %}
-                        -
+                        <span class="status-badge status-desconhecido">-</span>
                     {% endif %}
                 </td>
 
@@ -218,18 +226,17 @@
                 </td>
             </tr>
 
-            {% else %}
-            <tr>
-                <td
-                    colspan="7"
-                    class="text-muted"
-                >
-                    Nenhuma materia cadastrada.
-                </td>
-            </tr>
             {% endfor %}
         </tbody>
     </table>
+</div>
+{% else %}
+<div class="relatorio-estado">
+    <span class="relatorio-estado-titulo">Nenhuma matéria encontrada</span>
+    <span class="relatorio-estado-descricao">Ajuste os filtros acima ou crie uma nova matéria.</span>
+</div>
+{% endif %}
+</div>
 </div>
 
 {% endblock %}
