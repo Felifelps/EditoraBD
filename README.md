@@ -14,6 +14,8 @@ Relatórios como página inicial.
 - FastAPI + Jinja2 (templates renderizados no servidor)
 - PostgreSQL 15, acessado via **psycopg 3** puro (SQL cru + pool de conexões) — **sem ORM**, ou seja, sem SQLAlchemy nem Django ORM. Todo o acesso a dados fica nas classes `*Repository` em `app/repositories/`.
 - Migrações SQL simples (`migrations/*.sql`), aplicadas automaticamente no início da aplicação
+- Bootstrap 5 (via CDN) + design tokens próprios em `app/static/css/app.css` (cores, raio de borda, sombra) reaproveitados em toda a aplicação — sem framework de componentes adicional
+- [Chart.js](https://www.chartjs.org/) (via CDN, só na tela de Relatórios) para os gráficos do dashboard
 
 ## Rodando o projeto
 
@@ -129,11 +131,40 @@ Essas Views são consultadas por `app/repositories/relatorios.py` e exibidas na 
 que é a **página inicial** do sistema após o login (também acessível a qualquer
 momento pelo link "Relatorios", primeiro item do menu no cabeçalho).
 
+### Dashboard
+
+A tela é um dashboard, não uma lista de tabelas empilhadas:
+
+- **4 indicadores** no topo (Jornais, Edições, Jornalistas, Matérias) — somas/contagens
+  calculadas a partir dos próprios dados das Views, sem consulta extra.
+- **4 gráficos** (biblioteca [Chart.js](https://www.chartjs.org/), via CDN — a única
+  adicionada; nenhuma dependência Python nova), um para cada View além do catálogo de
+  matérias:
+  - *Edições por jornal* — ranking em barras horizontais (`vw_resumo_edicoes_jornal`);
+    o tooltip de cada barra mostra o diretor e a data da última edição.
+  - *Carga de matérias por jornalista* — ranking em barras horizontais **empilhadas**
+    por status (aprovadas/em andamento/reprovadas), usando as colunas já agregadas de
+    `vw_carga_materias_jornalista` — sem recalcular nada no frontend.
+  - *Especialidades dos editores-chefe* — barras horizontais com quantos setores cada
+    especialidade cobre, derivado do campo `especialidades` (agregado) de
+    `vw_setores_editores`.
+  - *Funcionários por cargo* — gráfico de rosca com a composição
+    Diretor/Jornalista/Editor-Chefe/sem cargo, a partir de `vw_funcionarios_detalhes`.
+- Cada gráfico é acompanhado de uma **tabela complementar** com os valores exatos, e o
+  catálogo de matérias (`vw_materias_completas`, a View mais extensa) permanece só como
+  tabela — é a camada de consulta detalhada do dashboard.
+- Cores dos gráficos reaproveitam as mesmas variáveis CSS (`--cor-primaria`,
+  `--cor-sucesso`, `--cor-aviso`, `--cor-perigo`, ...) já usadas nos badges de status do
+  resto da aplicação, lidas em tempo de execução via `getComputedStyle`.
+
 O layout usa um grid responsivo (`.relatorios-grid` em `app/static/css/app.css`): os
 quatro primeiros relatórios ficam em pares lado a lado (uma coluna só em telas
-menores) e o relatório de matérias — o mais extenso — ocupa a largura inteira embaixo.
-Cada relatório tem sua própria área de rolagem vertical (com cabeçalho fixo) para não
-esticar a página, além do scroll horizontal já existente por tabela.
+menores) e o catálogo de matérias — o mais extenso — ocupa a largura inteira embaixo.
+Cada card tem sua própria área de rolagem vertical (com cabeçalho de tabela fixo) para
+não esticar a página, além do scroll horizontal já existente por tabela. Cada seção
+trata individualmente os estados de carregando (spinner no botão "Atualizar"), erro
+(mensagem amigável, sem stack trace) e sem dados — uma falha ou ausência de dados numa
+View não derruba as demais.
 
 ## Esquema Conceitual
 
@@ -309,9 +340,10 @@ constraint `fk_editor_chefe_jornalista`.
 Testes de integração ponta a ponta (`tests/test_smoke.py`, com `pytest` + o
 `TestClient` do FastAPI) cobrem: login com credenciais válidas/inválidas, bloqueio de
 acesso sem autenticação, logout (e bloqueio de acesso após ele), carregamento das
-páginas principais, CRUD completo de uma entidade, a tela de Relatórios exibindo dados
-reais das 5 Views, e o tratamento de erro para uma referência inválida (FK). Não usam
-mocks — rodam contra um Postgres de verdade.
+páginas principais, CRUD completo de uma entidade, o dashboard de Relatórios exibindo
+as 5 Views (gráficos + tabelas), que os números embutidos nos gráficos batem com uma
+consulta direta às Views, e o tratamento de erro para uma referência inválida (FK). Não
+usam mocks — rodam contra um Postgres de verdade.
 
 Pré-requisito: o banco acessível (`docker compose up -d db`, ou a stack completa).
 
