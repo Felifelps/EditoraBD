@@ -1,6 +1,7 @@
 # Editora BD
 
-Projeto Banco de Dados — CRUD de gestão editorial (sem login: acesso direto às páginas).
+Projeto Banco de Dados — CRUD de gestão editorial, com login de funcionário e tela de
+Relatórios como página inicial.
 
 ## Integrantes
 * **Joran Vinicius Silveira Lage**
@@ -48,6 +49,31 @@ Para apagar também os dados do banco (recomeça do zero):
 docker compose down -v
 ```
 
+## Login
+
+A aplicação exige login de funcionário para acessar qualquer página — tentar abrir
+`http://localhost:8000/` (ou qualquer rota interna) sem estar autenticado redireciona
+automaticamente para `http://localhost:8000/login`.
+
+**Autenticação:** e-mail + senha do funcionário. A senha é validada no backend contra
+um hash salgado (PBKDF2-HMAC-SHA256, `app/security.py`) guardado na nova coluna
+`funcionario.senha_hash` — nunca em texto puro. A sessão é mantida por um cookie
+assinado (`SessionMiddleware` do Starlette, chave configurável via a variável de
+ambiente `SESSION_SECRET`); "Sair" no cabeçalho encerra a sessão.
+
+**Usuário de teste** (criado automaticamente pela migration
+`0004_add_login_funcionario.sql`, disponível logo após `docker compose up`, sem
+nenhum passo manual):
+
+```text
+E-mail: teste@editorabd.com
+Senha:  senha123
+```
+
+Após o login, o usuário é direcionado direto para a tela de **Relatórios**, que passa
+a ser a página inicial do sistema. As demais áreas (Funcionários, Jornais, Edições,
+Setores, Matérias) continuam acessíveis pelo menu no cabeçalho.
+
 ## Povoamento do banco
 
 O povoamento é feito **via script DML (`INSERT`)**. Não
@@ -66,6 +92,9 @@ tratados como o mesmo mecanismo de migração.
   `editor_especialidade`, `alocacao_jornalista_materia`).
 - `migrations/0003_create_views.sql` — DDL: cria as 5 Views SQL usadas na tela de
   Relatórios (ver seção [Views SQL e Relatórios](#views-sql-e-relatórios)).
+- `migrations/0004_add_login_funcionario.sql` — DDL + DML: adiciona a coluna
+  `funcionario.senha_hash` e cria o funcionário de teste usado no login (ver seção
+  [Login](#login)).
 
 Esses dois arquivos ficam em `migrations/*.sql` e são aplicados **automaticamente, em
 ordem, toda vez que a aplicação sobe** — ver `app/db/migrate.py`, chamado no `lifespan`
@@ -97,7 +126,14 @@ simplificar as consultas usadas nos relatórios:
 
 Essas Views são consultadas por `app/repositories/relatorios.py` e exibidas na tela
 `GET /relatorios` (`app/routers/relatorios.py` + `app/templates/relatorios/list.html`),
-acessível pelo link "Relatorios" no menu de navegação.
+que é a **página inicial** do sistema após o login (também acessível a qualquer
+momento pelo link "Relatorios", primeiro item do menu no cabeçalho).
+
+O layout usa um grid responsivo (`.relatorios-grid` em `app/static/css/app.css`): os
+quatro primeiros relatórios ficam em pares lado a lado (uma coluna só em telas
+menores) e o relatório de matérias — o mais extenso — ocupa a largura inteira embaixo.
+Cada relatório tem sua própria área de rolagem vertical (com cabeçalho fixo) para não
+esticar a página, além do scroll horizontal já existente por tabela.
 
 ## Esquema Conceitual
 
@@ -271,10 +307,11 @@ constraint `fk_editor_chefe_jornalista`.
 ## Testes
 
 Testes de integração ponta a ponta (`tests/test_smoke.py`, com `pytest` + o
-`TestClient` do FastAPI) cobrem: carregamento das páginas principais, CRUD completo
-de uma entidade, a tela de Relatórios exibindo dados reais das 5 Views e o tratamento
-de erro para uma referência inválida (FK). Não usam mocks — rodam contra um Postgres
-de verdade.
+`TestClient` do FastAPI) cobrem: login com credenciais válidas/inválidas, bloqueio de
+acesso sem autenticação, logout (e bloqueio de acesso após ele), carregamento das
+páginas principais, CRUD completo de uma entidade, a tela de Relatórios exibindo dados
+reais das 5 Views, e o tratamento de erro para uma referência inválida (FK). Não usam
+mocks — rodam contra um Postgres de verdade.
 
 Pré-requisito: o banco acessível (`docker compose up -d db`, ou a stack completa).
 
@@ -302,9 +339,10 @@ migrations/
 
 | Caminho | Responsabilidade |
 |---|---|
-| `app/main.py` | Ponto de entrada: cria a FastAPI, roda as migrações no startup (`lifespan`) e registra os routers |
-| `app/config.py` | Leitura de variáveis de ambiente (ex.: `DATABASE_URL`) via pydantic-settings |
+| `app/main.py` | Ponto de entrada: cria a FastAPI, roda as migrações no startup (`lifespan`), registra o `SessionMiddleware`, os routers e os exception handlers globais |
+| `app/config.py` | Leitura de variáveis de ambiente (ex.: `DATABASE_URL`, `SESSION_SECRET`) via pydantic-settings |
 | `app/templating.py` | Configuração do Jinja2 (motor de templates) |
+| `app/security.py` | Hash e verificação de senha (PBKDF2-HMAC-SHA256) usados no login |
 | `app/routers/` | Rotas HTTP — recebem a requisição, chamam o service e devolvem a resposta (JSON ou HTML). Ex.: `app/routers/funcionarios.py` |
 | `app/services/` | Regra de negócio: validações (ex.: CPF duplicado) e orquestração entre repositories, sem falar SQL diretamente |
 | `app/repositories/` | Acesso ao banco: todo o SQL cru (psycopg) fica aqui, uma classe `*Repository` por entidade |
