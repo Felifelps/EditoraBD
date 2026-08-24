@@ -17,6 +17,37 @@ Relatórios como página inicial.
 - Bootstrap 5 (via CDN) + design tokens próprios em `app/static/css/app.css` (cores, raio de borda, sombra) reaproveitados em toda a aplicação — sem framework de componentes adicional
 - [Chart.js](https://www.chartjs.org/) (via CDN, só na tela de Relatórios) para os gráficos do dashboard
 
+## Portas
+
+| Serviço | Porta | Observação |
+|---|---|---|
+| Banco (Postgres 15) | `5432` | Container `db`, usuário `root`, senha `root`, banco `root`. |
+| Backend (FastAPI) | `8000` | Container `web`. |
+| Frontend | `8000` (mesma do backend) | Não existe um serviço de frontend separado: as telas (HTML) são renderizadas no próprio servidor pelo FastAPI via Jinja2, então o frontend é servido na **mesma porta** do backend. |
+
+## Correções da versão anterior
+
+Problemas identificados na entrega anterior e corrigidos diretamente na `main`
+(commits `c14a703`, `25121f9` e `67d1e2e`):
+
+- **Hierarquia de especialização de `Editor_Chefe` incorreta**: `Editor_Chefe` era
+  modelado como subtipo disjunto de `Funcionario`, o que impedia um editor-chefe de
+  assinar matérias como jornalista (já que `alocacao_jornalista_materia` referencia
+  `jornalista.cpf_jornalista`). Corrigido especializando `Editor_Chefe` a partir de
+  `Jornalista` — ver seção [Esquema Conceitual](#esquema-conceitual).
+- **Semântica de `materia.status` divergente**: o Dicionário de Dados definia
+  `0 = Reprovada, 1 = Aprovada, 2 = Em Andamento`, mas o seed e o frontend usavam uma
+  ordem diferente. Corrigido para que seed, backend e frontend usem o mapeamento
+  documentado.
+- **CHECK constraints ausentes no DDL**: não havia validação de banco para salário
+  negativo, datas futuras (`data_nascimento`, `data_inicio_mandato`) e domínio de
+  `materia.status`. Todas as três foram adicionadas em `migrations/0001_create_tables.sql`.
+- **Build do Docker quebrado**: o `Dockerfile` copiava e exigia `uv.lock`
+  (`uv sync --frozen`), mas o arquivo estava no `.gitignore` e nunca era versionado; a
+  imagem base também era `python:3.11-slim`, incompatível com o
+  `requires-python >= 3.12` do `pyproject.toml`. Corrigido versionando o `uv.lock` e
+  atualizando a imagem base para `python:3.12-slim`.
+
 ## Rodando o projeto
 
 Pré-requisito: Docker e Docker Compose instalados.
@@ -25,15 +56,9 @@ Pré-requisito: Docker e Docker Compose instalados.
 docker compose up -d --build
 ```
 
-Isso sobe dois serviços definidos no `docker-compose.yml`:
-
-- `db` — Postgres 15, porta `5432`, usuário `root`, senha `root`, banco `root`.
-- `web` — a aplicação FastAPI, porta `8000`, já configurada com a `DATABASE_URL` do
-  `db` diretamente no `docker-compose.yml` (sem precisar de `.env`).
-
-Não existe um serviço de frontend separado: as telas (HTML) são renderizadas no
-próprio servidor pelo FastAPI via Jinja2, então o frontend é servido na **mesma porta
-`8000`** do backend.
+Isso sobe dois serviços definidos no `docker-compose.yml` — `db` e `web`, já
+configurados com a `DATABASE_URL` do `db` diretamente no `docker-compose.yml` (sem
+precisar de `.env`) — ver as portas de cada um na seção [Portas](#portas).
 
 Ao iniciar, a aplicação já roda as migrações pendentes automaticamente contra o `db`.
 
