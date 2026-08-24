@@ -377,6 +377,32 @@ def deletar(
     )
 
 
+@router.post("/{id_materia}/status")
+def atualizar_status(
+    id_materia: int,
+    status: int = Form(...),
+    service: MateriaService = Depends(get_materia_service),
+):
+    if status not in (0, 1, 2):
+        raise HTTPException(
+            status_code=400,
+            detail="Status inválido.",
+        )
+
+    try:
+        service.atualizar_status(id_materia, status)
+    except MateriaNaoEncontradaError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail=str(exc),
+        ) from exc
+
+    return RedirectResponse(
+        url=f"/materias/{id_materia}",
+        status_code=303,
+    )
+
+
 @router.post("/{id_materia}/jornalistas/alocar")
 def alocar_jornalista(
     id_materia: int,
