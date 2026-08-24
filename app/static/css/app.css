@@ -205,6 +205,41 @@ input[type="date"] {
 
 
 /* =========================================================
+   RELATORIOS (grid com rolagem interna)
+   ========================================================= */
+
+.relatorios-grid {
+    display: grid;
+
+    grid-template-columns: repeat(2, 1fr);
+
+    gap: 1rem;
+}
+
+.relatorio-scroll {
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+.relatorio-scroll--grande {
+    max-height: 560px;
+}
+
+.relatorio-scroll thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+@media (max-width: 991.98px) {
+
+    .relatorios-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* =========================================================
    AÇÕES DA MATÉRIA
    ========================================================= */
 
