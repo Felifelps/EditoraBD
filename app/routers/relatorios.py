@@ -22,8 +22,11 @@ def _consultar(repo: RelatorioRepository, consulta):
         return [], "Nao foi possivel carregar este relatorio. Tente novamente."
 
 
+TOP_N_RANKING = 10
+
+
 def _grafico_resumo_edicoes(linhas: list[dict]) -> dict:
-    ordenado = sorted(linhas, key=lambda linha: linha["total_edicoes"] or 0, reverse=True)
+    ordenado = sorted(linhas, key=lambda linha: linha["total_edicoes"] or 0, reverse=True)[:TOP_N_RANKING]
     return {
         "labels": [linha["nome_jornal"] for linha in ordenado],
         "totais": [int(linha["total_edicoes"] or 0) for linha in ordenado],
@@ -36,7 +39,7 @@ def _grafico_resumo_edicoes(linhas: list[dict]) -> dict:
 
 
 def _grafico_carga_jornalista(linhas: list[dict]) -> dict:
-    ordenado = sorted(linhas, key=lambda linha: linha["total_materias"] or 0, reverse=True)
+    ordenado = sorted(linhas, key=lambda linha: linha["total_materias"] or 0, reverse=True)[:TOP_N_RANKING]
     return {
         "labels": [linha["nome_jornalista"] for linha in ordenado],
         "aprovadas": [int(linha["materias_aprovadas"] or 0) for linha in ordenado],

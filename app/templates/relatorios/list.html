@@ -98,8 +98,11 @@
 <div class="relatorios-grid mb-4">
 
     <div class="card dashboard-card shadow-sm border-0 h-100">
-        <div class="card-header bg-white">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
             <h2 class="h6 mb-0">Edições por jornal</h2>
+            {% if relatorios.resumo_edicoes_jornal[0] and relatorios.resumo_edicoes_jornal[0]|length > 10 %}
+                <span class="badge text-bg-light border">Top 10</span>
+            {% endif %}
         </div>
         <div class="card-body">
             {% set dados_resumo, erro_resumo = relatorios.resumo_edicoes_jornal %}
@@ -108,7 +111,7 @@
             {% elif not dados_resumo %}
                 {{ estado_vazio() }}
             {% else %}
-                <div class="chart-container">
+                <div class="chart-container chart-container--grande">
                     <canvas id="graficoResumoEdicoes" role="img" aria-label="Ranking de edições por jornal"></canvas>
                 </div>
                 {{ tabela("resumo_edicoes_jornal", ["nome_jornal", "nome_diretor", "total_edicoes", "ultima_edicao"], relatorios) }}
@@ -117,8 +120,11 @@
     </div>
 
     <div class="card dashboard-card shadow-sm border-0 h-100">
-        <div class="card-header bg-white">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
             <h2 class="h6 mb-0">Carga de matérias por jornalista</h2>
+            {% if relatorios.carga_materias_jornalista[0] and relatorios.carga_materias_jornalista[0]|length > 10 %}
+                <span class="badge text-bg-light border">Top 10</span>
+            {% endif %}
         </div>
         <div class="card-body">
             {% set dados_carga, erro_carga = relatorios.carga_materias_jornalista %}
@@ -127,7 +133,7 @@
             {% elif not dados_carga %}
                 {{ estado_vazio() }}
             {% else %}
-                <div class="chart-container">
+                <div class="chart-container chart-container--grande">
                     <canvas id="graficoCargaJornalista" role="img" aria-label="Ranking de matérias por jornalista, separado por status"></canvas>
                 </div>
                 {{ tabela("carga_materias_jornalista", ["nome_jornalista", "mtb", "total_materias", "materias_aprovadas", "materias_reprovadas", "materias_em_andamento"], relatorios) }}
@@ -154,7 +160,7 @@
             {% elif not dados_setores %}
                 {{ estado_vazio() }}
             {% else %}
-                <div class="chart-container">
+                <div class="chart-container chart-container--grande">
                     <canvas id="graficoEspecialidades" role="img" aria-label="Quantidade de setores cobertos por especialidade"></canvas>
                 </div>
                 {{ tabela("setores_editores", ["nome_setor", "nome_editor", "especialidades"], relatorios) }}

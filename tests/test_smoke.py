@@ -176,18 +176,28 @@ def test_dados_dos_graficos_correspondem_as_views():
         with app.state.pool.connection() as conn:
             repo = RelatorioRepository(conn)
 
+            # os graficos de ranking mostram so o Top 10 (para caber legivel no
+            # espaco), mas a tabela ao lado continua com todas as linhas da View
+            TOP_N = 10
+
             resumo = repo.resumo_edicoes_jornal()
+            top_resumo = sorted(resumo, key=lambda l: l["total_edicoes"] or 0, reverse=True)[:TOP_N]
             grafico_resumo = _grafico_do_html(html, "graficoResumoEdicoes")
             assert sorted(grafico_resumo["totais"], reverse=True) == grafico_resumo["totais"]
-            assert sum(grafico_resumo["totais"]) == sum(l["total_edicoes"] or 0 for l in resumo)
-            assert set(grafico_resumo["labels"]) == {l["nome_jornal"] for l in resumo}
+            assert len(grafico_resumo["labels"]) == min(TOP_N, len(resumo))
+            assert sum(grafico_resumo["totais"]) == sum(l["total_edicoes"] or 0 for l in top_resumo)
+            assert set(grafico_resumo["labels"]) == {l["nome_jornal"] for l in top_resumo}
+            # a tabela complementar continua com a lista completa, nao so o Top 10
+            assert all(l["nome_jornal"] in html for l in resumo)
 
             carga = repo.carga_materias_jornalista()
+            top_carga = sorted(carga, key=lambda l: l["total_materias"] or 0, reverse=True)[:TOP_N]
             grafico_carga = _grafico_do_html(html, "graficoCargaJornalista")
-            assert set(grafico_carga["labels"]) == {l["nome_jornalista"] for l in carga}
-            assert sum(grafico_carga["aprovadas"]) == sum(l["materias_aprovadas"] or 0 for l in carga)
-            assert sum(grafico_carga["reprovadas"]) == sum(l["materias_reprovadas"] or 0 for l in carga)
-            assert sum(grafico_carga["em_andamento"]) == sum(l["materias_em_andamento"] or 0 for l in carga)
+            assert len(grafico_carga["labels"]) == min(TOP_N, len(carga))
+            assert set(grafico_carga["labels"]) == {l["nome_jornalista"] for l in top_carga}
+            assert sum(grafico_carga["aprovadas"]) == sum(l["materias_aprovadas"] or 0 for l in top_carga)
+            assert sum(grafico_carga["reprovadas"]) == sum(l["materias_reprovadas"] or 0 for l in top_carga)
+            assert sum(grafico_carga["em_andamento"]) == sum(l["materias_em_andamento"] or 0 for l in top_carga)
 
             cargos = repo.funcionarios_detalhes()
             grafico_cargos = _grafico_do_html(html, "graficoCargos")

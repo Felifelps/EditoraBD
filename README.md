@@ -145,6 +145,9 @@ A tela é um dashboard, não uma lista de tabelas empilhadas:
   - *Carga de matérias por jornalista* — ranking em barras horizontais **empilhadas**
     por status (aprovadas/em andamento/reprovadas), usando as colunas já agregadas de
     `vw_carga_materias_jornalista` — sem recalcular nada no frontend.
+
+  Os dois rankings mostram só o **Top 10** no gráfico (com mais categorias o gráfico
+  fica ilegível) — a tabela logo abaixo continua com a lista completa.
   - *Especialidades dos editores-chefe* — barras horizontais com quantos setores cada
     especialidade cobre, derivado do campo `especialidades` (agregado) de
     `vw_setores_editores`.
