@@ -1,35 +1,52 @@
 {% extends "base.html" %}
 {% block title %}Jornais{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0">Jornais</h1>
-    <a class="btn btn-primary" href="/jornais/novo">Novo jornal</a>
+
+<div class="page-header">
+    <div>
+        <h1 class="h3">Jornais</h1>
+        <p class="text-muted mb-0">Gerencie os jornais cadastrados no sistema.</p>
+    </div>
+    <a class="btn btn-primary" href="/jornais/novo">+ Novo jornal</a>
 </div>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Nome</th>
-            <th>Diretor</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for j in jornais %}
-        <tr>
-            <td>{{ j.nome_jornal }}</td>
-            <td>{{ j.nome_diretor or "-" }}</td>
-            <td class="text-end">
-                <a class="btn btn-sm btn-outline-secondary" href="/jornais/{{ j.nome_jornal }}">Ver</a>
-                <a class="btn btn-sm btn-outline-secondary" href="/jornais/{{ j.nome_jornal }}/editar">Editar</a>
-                <form method="post" action="/jornais/{{ j.nome_jornal }}/deletar" class="d-inline"
-                      onsubmit="return confirm('Excluir jornal?');">
-                    <button class="btn btn-sm btn-outline-danger" type="submit">Excluir</button>
-                </form>
-            </td>
-        </tr>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        {% if jornais %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nome</th>
+                        <th>Diretor</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for j in jornais %}
+                    <tr>
+                        <td>{{ j.nome_jornal }}</td>
+                        <td>{{ j.nome_diretor or "-" }}</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-secondary" href="/jornais/{{ j.nome_jornal }}">Ver</a>
+                            <a class="btn btn-sm btn-outline-secondary" href="/jornais/{{ j.nome_jornal }}/editar">Editar</a>
+                            <form method="post" action="/jornais/{{ j.nome_jornal }}/deletar" class="d-inline"
+                                  onsubmit="return confirm('Excluir jornal?');">
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Excluir</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         {% else %}
-        <tr><td colspan="3" class="text-muted">Nenhum jornal cadastrado.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+        <div class="relatorio-estado">
+            <span class="relatorio-estado-titulo">Nenhum jornal cadastrado</span>
+            <span class="relatorio-estado-descricao">Comece criando o primeiro jornal.</span>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
 {% endblock %}

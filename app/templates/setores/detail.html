@@ -1,16 +1,35 @@
 {% extends "base.html" %}
 {% block title %}{{ setor.nome }}{% endblock %}
 {% block content %}
-<h1 class="h3 mb-3">{{ setor.nome }}</h1>
-<dl class="row">
-    <dt class="col-sm-3">ID</dt><dd class="col-sm-9">{{ setor.id_setor }}</dd>
-    <dt class="col-sm-3">Descricao</dt><dd class="col-sm-9">{{ setor.descricao or "-" }}</dd>
-    <dt class="col-sm-3">Editor-chefe</dt><dd class="col-sm-9">{{ setor.nome_editor_chefe or "-" }}</dd>
-</dl>
-<a class="btn btn-primary" href="/setores/{{ setor.id_setor }}/editar">Editar</a>
-<form method="post" action="/setores/{{ setor.id_setor }}/deletar" class="d-inline"
-      onsubmit="return confirm('Excluir setor?')">
-    <button class="btn btn-danger" type="submit">Excluir</button>
-</form>
-<a class="btn btn-outline-secondary" href="/setores">Voltar</a>
+
+<div class="page-header">
+    <div>
+        <p class="text-muted mb-1 small">Setor #{{ setor.id_setor }}</p>
+        <h1 class="h3 mb-0">{{ setor.nome }}</h1>
+    </div>
+    <a class="btn btn-outline-secondary" href="/setores">Voltar</a>
+</div>
+
+<div class="card detail-card shadow-sm border-0">
+    <div class="card-body">
+        <dl class="detail-grid">
+            <div>
+                <dt>Editor-chefe</dt>
+                <dd>{{ setor.nome_editor_chefe or "-" }}</dd>
+            </div>
+            <div class="detail-full">
+                <dt>Descrição</dt>
+                <dd>{{ setor.descricao or "-" }}</dd>
+            </div>
+        </dl>
+        <div class="d-flex justify-content-end gap-2">
+            <a class="btn btn-primary" href="/setores/{{ setor.id_setor }}/editar">Editar</a>
+            <form method="post" action="/setores/{{ setor.id_setor }}/deletar" class="d-inline"
+                  onsubmit="return confirm('Excluir setor?')">
+                <button class="btn btn-outline-danger" type="submit">Excluir</button>
+            </form>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

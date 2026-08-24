@@ -1,21 +1,61 @@
 {% extends "base.html" %}
 {% block title %}{{ funcionario.nome }}{% endblock %}
 {% block content %}
-<h1 class="h3 mb-3">{{ funcionario.nome }}</h1>
-<dl class="row">
-    <dt class="col-sm-3">CPF</dt><dd class="col-sm-9">{{ funcionario.cpf }}</dd>
-    <dt class="col-sm-3">Email</dt><dd class="col-sm-9">{{ funcionario.email }}</dd>
-    <dt class="col-sm-3">Telefone</dt><dd class="col-sm-9">{{ funcionario.telefone or "-" }}</dd>
-    <dt class="col-sm-3">Endereco</dt>
-    <dd class="col-sm-9">{{ funcionario.rua or "-" }}, {{ funcionario.numero or "-" }} - CEP {{ funcionario.cep or "-" }}</dd>
-    <dt class="col-sm-3">Nascimento</dt><dd class="col-sm-9">{{ funcionario.data_nascimento }}</dd>
-    <dt class="col-sm-3">Salario</dt><dd class="col-sm-9">{{ funcionario.salario }}</dd>
-    <dt class="col-sm-3">Tipo</dt><dd class="col-sm-9">{{ funcionario.tipo }}</dd>
-</dl>
-<a class="btn btn-primary" href="/funcionarios/{{ funcionario.cpf }}/editar">Editar</a>
-<form method="post" action="/funcionarios/{{ funcionario.cpf }}/deletar" class="d-inline"
-      onsubmit="return confirm('Excluir funcionario?')">
-    <button class="btn btn-danger" type="submit">Excluir</button>
-</form>
-<a class="btn btn-outline-secondary" href="/funcionarios">Voltar</a>
+
+<div class="page-header">
+    <div>
+        <p class="text-muted mb-1 small">Funcionário{% if funcionario.tipo %} · {{ funcionario.tipo|replace('_', '-')|title }}{% endif %}</p>
+        <h1 class="h3 mb-0">{{ funcionario.nome }}</h1>
+    </div>
+    <a class="btn btn-outline-secondary" href="/funcionarios">Voltar</a>
+</div>
+
+<div class="card detail-card shadow-sm border-0">
+    <div class="card-body">
+        <dl class="detail-grid">
+            <div>
+                <dt>CPF</dt>
+                <dd>{{ funcionario.cpf }}</dd>
+            </div>
+            <div>
+                <dt>E-mail</dt>
+                <dd>{{ funcionario.email }}</dd>
+            </div>
+            <div>
+                <dt>Telefone</dt>
+                <dd>{{ funcionario.telefone or "-" }}</dd>
+            </div>
+            <div>
+                <dt>Data de nascimento</dt>
+                <dd>{{ funcionario.data_nascimento }}</dd>
+            </div>
+            <div>
+                <dt>Salário</dt>
+                <dd>R$ {{ funcionario.salario }}</dd>
+            </div>
+            <div>
+                <dt>Tipo</dt>
+                <dd>{{ funcionario.tipo or "-" }}</dd>
+            </div>
+            <div class="detail-full">
+                <dt>Endereço</dt>
+                <dd>
+                    {%- if funcionario.rua -%}
+                        {{ funcionario.rua }}, {{ funcionario.numero or "s/n" }} — CEP {{ funcionario.cep or "-" }}
+                    {%- else -%}
+                        -
+                    {%- endif -%}
+                </dd>
+            </div>
+        </dl>
+        <div class="d-flex justify-content-end gap-2">
+            <a class="btn btn-primary" href="/funcionarios/{{ funcionario.cpf }}/editar">Editar</a>
+            <form method="post" action="/funcionarios/{{ funcionario.cpf }}/deletar" class="d-inline"
+                  onsubmit="return confirm('Excluir funcionario?')">
+                <button class="btn btn-outline-danger" type="submit">Excluir</button>
+            </form>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

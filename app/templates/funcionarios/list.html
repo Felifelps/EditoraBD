@@ -1,41 +1,58 @@
 {% extends "base.html" %}
 {% block title %}Funcionarios{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0">Funcionarios</h1>
-    <a class="btn btn-primary" href="/funcionarios/novo">Novo funcionario</a>
+
+<div class="page-header">
+    <div>
+        <h1 class="h3">Funcionários</h1>
+        <p class="text-muted mb-0">Gerencie os funcionários cadastrados no sistema.</p>
+    </div>
+    <a class="btn btn-primary" href="/funcionarios/novo">+ Novo funcionário</a>
 </div>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>CPF</th>
-            <th>Nome</th>
-            <th>Email</th>
-            <th>Tipo</th>
-            <th>Salario</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for f in funcionarios %}
-        <tr>
-            <td>{{ f.cpf }}</td>
-            <td>{{ f.nome }}</td>
-            <td>{{ f.email }}</td>
-            <td>{{ f.tipo }}</td>
-            <td>{{ f.salario }}</td>
-            <td class="text-end">
-                <a class="btn btn-sm btn-outline-secondary" href="/funcionarios/{{ f.cpf }}">Ver</a>
-                <a class="btn btn-sm btn-outline-secondary" href="/funcionarios/{{ f.cpf }}/editar">Editar</a>
-                <form method="post" action="/funcionarios/{{ f.cpf }}/deletar" class="d-inline"
-                      onsubmit="return confirm('Excluir funcionario?');">
-                    <button class="btn btn-sm btn-outline-danger" type="submit">Excluir</button>
-                </form>
-            </td>
-        </tr>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        {% if funcionarios %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>CPF</th>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Tipo</th>
+                        <th>Salário</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in funcionarios %}
+                    <tr>
+                        <td>{{ f.cpf }}</td>
+                        <td>{{ f.nome }}</td>
+                        <td>{{ f.email }}</td>
+                        <td>{{ f.tipo or "-" }}</td>
+                        <td>{{ f.salario }}</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-secondary" href="/funcionarios/{{ f.cpf }}">Ver</a>
+                            <a class="btn btn-sm btn-outline-secondary" href="/funcionarios/{{ f.cpf }}/editar">Editar</a>
+                            <form method="post" action="/funcionarios/{{ f.cpf }}/deletar" class="d-inline"
+                                  onsubmit="return confirm('Excluir funcionario?');">
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Excluir</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         {% else %}
-        <tr><td colspan="6" class="text-muted">Nenhum funcionario cadastrado.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+        <div class="relatorio-estado">
+            <span class="relatorio-estado-titulo">Nenhum funcionário cadastrado</span>
+            <span class="relatorio-estado-descricao">Comece criando o primeiro funcionário.</span>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
 {% endblock %}

@@ -1,37 +1,54 @@
 {% extends "base.html" %}
 {% block title %}Setores{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0">Setores</h1>
-    <a class="btn btn-primary" href="/setores/novo">Novo setor</a>
+
+<div class="page-header">
+    <div>
+        <h1 class="h3">Setores</h1>
+        <p class="text-muted mb-0">Gerencie as editorias/setores da redação.</p>
+    </div>
+    <a class="btn btn-primary" href="/setores/novo">+ Novo setor</a>
 </div>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Nome</th>
-            <th>Editor-chefe</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for s in setores %}
-        <tr>
-            <td>{{ s.id_setor }}</td>
-            <td>{{ s.nome }}</td>
-            <td>{{ s.nome_editor_chefe or "-" }}</td>
-            <td class="text-end">
-                <a class="btn btn-sm btn-outline-secondary" href="/setores/{{ s.id_setor }}">Ver</a>
-                <a class="btn btn-sm btn-outline-secondary" href="/setores/{{ s.id_setor }}/editar">Editar</a>
-                <form method="post" action="/setores/{{ s.id_setor }}/deletar" class="d-inline"
-                      onsubmit="return confirm('Excluir setor?');">
-                    <button class="btn btn-sm btn-outline-danger" type="submit">Excluir</button>
-                </form>
-            </td>
-        </tr>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        {% if setores %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Editor-chefe</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in setores %}
+                    <tr>
+                        <td>{{ s.id_setor }}</td>
+                        <td>{{ s.nome }}</td>
+                        <td>{{ s.nome_editor_chefe or "-" }}</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-secondary" href="/setores/{{ s.id_setor }}">Ver</a>
+                            <a class="btn btn-sm btn-outline-secondary" href="/setores/{{ s.id_setor }}/editar">Editar</a>
+                            <form method="post" action="/setores/{{ s.id_setor }}/deletar" class="d-inline"
+                                  onsubmit="return confirm('Excluir setor?');">
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Excluir</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         {% else %}
-        <tr><td colspan="4" class="text-muted">Nenhum setor cadastrado.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+        <div class="relatorio-estado">
+            <span class="relatorio-estado-titulo">Nenhum setor cadastrado</span>
+            <span class="relatorio-estado-descricao">Comece criando o primeiro setor.</span>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
 {% endblock %}

@@ -1,29 +1,51 @@
 {% extends "base.html" %}
 {% block title %}{% if jornal %}Editar jornal{% else %}Novo jornal{% endif %}{% endblock %}
 {% block content %}
-<h1 class="h3 mb-3">{% if jornal %}Editar jornal{% else %}Novo jornal{% endif %}</h1>
+
+<div class="page-header">
+    <div>
+        <h1 class="h3">{% if jornal %}Editar jornal{% else %}Novo jornal{% endif %}</h1>
+        <p class="text-muted mb-0">
+            {% if jornal %}Atualize as informações do jornal.{% else %}Cadastre um novo jornal.{% endif %}
+        </p>
+    </div>
+</div>
+
 {% if erro %}
-<div class="alert alert-danger">{{ erro }}</div>
+<div class="alert alert-danger" role="alert">{{ erro }}</div>
 {% endif %}
-<form method="post" action="{{ acao }}" class="row g-3">
-    <div class="col-md-8">
-        <label class="form-label">Nome do jornal</label>
-        <input class="form-control" name="nome_jornal" required
-               value="{{ jornal.nome_jornal if jornal else '' }}"
-               {% if jornal %}readonly{% endif %}>
-    </div>
-    <div class="col-md-4">
-        <label class="form-label">Diretor</label>
-        <select class="form-select" name="cpf_diretor">
-            <option value="">-- nenhum --</option>
-            {% for d in diretores %}
-            <option value="{{ d.cpf }}" {% if jornal and jornal.cpf_diretor == d.cpf %}selected{% endif %}>{{ d.nome }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="col-12">
-        <button class="btn btn-primary" type="submit">Salvar</button>
-        <a class="btn btn-outline-secondary" href="/jornais">Cancelar</a>
-    </div>
-</form>
+
+<div class="form-card-wrap">
+    <form method="post" action="{{ acao }}">
+        <div class="card form-card shadow-sm border-0">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label">Nome do jornal <span class="form-obrigatorio">*</span></label>
+                        <input class="form-control" name="nome_jornal" required
+                               placeholder="Ex.: Jornal Pernambuco"
+                               value="{{ jornal.nome_jornal if jornal else '' }}"
+                               {% if jornal %}readonly{% endif %}>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Diretor</label>
+                        <select class="form-select" name="cpf_diretor">
+                            <option value="">-- nenhum --</option>
+                            {% for d in diretores %}
+                            <option value="{{ d.cpf }}" {% if jornal and jornal.cpf_diretor == d.cpf %}selected{% endif %}>{{ d.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-white d-flex justify-content-end gap-2">
+                <a class="btn btn-outline-secondary" href="/jornais">Cancelar</a>
+                <button class="btn btn-primary" type="submit">
+                    {% if jornal %}Salvar alterações{% else %}Criar jornal{% endif %}
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
 {% endblock %}

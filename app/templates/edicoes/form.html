@@ -1,36 +1,57 @@
 {% extends "base.html" %}
 {% block title %}{% if edicao %}Editar edicao{% else %}Nova edicao{% endif %}{% endblock %}
 {% block content %}
-<h1 class="h3 mb-3">{% if edicao %}Editar edicao{% else %}Nova edicao{% endif %}</h1>
+
+<div class="page-header">
+    <div>
+        <h1 class="h3">{% if edicao %}Editar edição{% else %}Nova edição{% endif %}</h1>
+        <p class="text-muted mb-0">
+            {% if edicao %}Atualize as informações da edição.{% else %}Cadastre uma nova edição de um jornal.{% endif %}
+        </p>
+    </div>
+</div>
+
 {% if erro %}
-<div class="alert alert-danger">{{ erro }}</div>
+<div class="alert alert-danger" role="alert">{{ erro }}</div>
 {% endif %}
-<form method="post" action="{{ acao }}" class="row g-3">
-    <div class="col-md-6">
-        <label class="form-label">Jornal</label>
-        {% if edicao %}
-        <input class="form-control" value="{{ edicao.nome_jornal }}" readonly>
-        {% else %}
-        <select class="form-select" name="nome_jornal" required>
-            {% for nome in jornais %}
-            <option value="{{ nome }}">{{ nome }}</option>
-            {% endfor %}
-        </select>
-        {% endif %}
-    </div>
-    <div class="col-md-3">
-        <label class="form-label">Numero</label>
-        <input class="form-control" type="number" name="numero_edicao" required
-               value="{{ edicao.numero_edicao if edicao else '' }}"
-               {% if edicao %}readonly{% endif %}>
-    </div>
-    <div class="col-md-3">
-        <label class="form-label">Data</label>
-        <input class="form-control" type="date" name="data" value="{{ edicao.data if edicao else '' }}">
-    </div>
-    <div class="col-12">
-        <button class="btn btn-primary" type="submit">Salvar</button>
-        <a class="btn btn-outline-secondary" href="/edicoes">Cancelar</a>
-    </div>
-</form>
+
+<div class="form-card-wrap">
+    <form method="post" action="{{ acao }}">
+        <div class="card form-card shadow-sm border-0">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Jornal <span class="form-obrigatorio">*</span></label>
+                        {% if edicao %}
+                        <input class="form-control" value="{{ edicao.nome_jornal }}" readonly>
+                        {% else %}
+                        <select class="form-select" name="nome_jornal" required>
+                            {% for nome in jornais %}
+                            <option value="{{ nome }}">{{ nome }}</option>
+                            {% endfor %}
+                        </select>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Número <span class="form-obrigatorio">*</span></label>
+                        <input class="form-control" type="number" name="numero_edicao" required
+                               value="{{ edicao.numero_edicao if edicao else '' }}"
+                               {% if edicao %}readonly{% endif %}>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Data</label>
+                        <input class="form-control" type="date" name="data" value="{{ edicao.data if edicao else '' }}">
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-white d-flex justify-content-end gap-2">
+                <a class="btn btn-outline-secondary" href="/edicoes">Cancelar</a>
+                <button class="btn btn-primary" type="submit">
+                    {% if edicao %}Salvar alterações{% else %}Criar edição{% endif %}
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
 {% endblock %}
