@@ -5,9 +5,15 @@
 :root {
     --cor-primaria: #0d6efd;
     --cor-primaria-hover: #0b5ed7;
+    --cor-primaria-suave: #e7f1ff;
     --cor-sucesso: #198754;
+    --cor-sucesso-suave: #d1e7dd;
     --cor-perigo: #dc3545;
+    --cor-perigo-suave: #f8d7da;
     --cor-aviso: #ffc107;
+    --cor-aviso-suave: #fff3cd;
+    --cor-info: #0dcaf0;
+    --cor-roxo: #6f42c1;
 
     --cor-texto: #212529;
     --cor-texto-secundario: #6c757d;
@@ -16,6 +22,10 @@
     --cor-borda: #dee2e6;
 
     --raio-padrao: 0.5rem;
+    --raio-grande: 0.75rem;
+
+    --sombra-card: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.06);
+    --sombra-card-hover: 0 4px 12px rgba(15, 23, 42, 0.08);
 }
 
 
@@ -43,13 +53,25 @@ body {
 }
 
 .navbar .nav-link {
+    border-radius: 0.4rem;
+    padding: 0.4rem 0.7rem;
+    font-size: 0.925rem;
+
     transition:
         color 0.2s ease-in-out,
+        background-color 0.2s ease-in-out,
         opacity 0.2s ease-in-out;
 }
 
 .navbar .nav-link:hover {
-    opacity: 0.85;
+    background-color: rgba(255, 255, 255, 0.08);
+    opacity: 0.95;
+}
+
+.navbar .nav-link.active {
+    color: #fff !important;
+    background-color: rgba(255, 255, 255, 0.14);
+    font-weight: 600;
 }
 
 
@@ -71,11 +93,19 @@ section {
    ========================================================= */
 
 .card {
-    border-radius: var(--raio-padrao);
+    border-radius: var(--raio-grande);
+    box-shadow: var(--sombra-card);
 }
 
 .card-header {
     background-color: #fff;
+    border-bottom-color: var(--cor-borda);
+    font-weight: 600;
+}
+
+.card-header:first-child {
+    border-top-left-radius: var(--raio-grande);
+    border-top-right-radius: var(--raio-grande);
 }
 
 
@@ -205,8 +235,44 @@ input[type="date"] {
 
 
 /* =========================================================
-   RELATORIOS (grid com rolagem interna)
+   DASHBOARD DE RELATORIOS
    ========================================================= */
+
+.kpi-grid {
+    display: grid;
+
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 1rem;
+}
+
+.kpi-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+
+    padding: 1rem 1.25rem;
+
+    background-color: #fff;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio-grande);
+    box-shadow: var(--sombra-card);
+}
+
+.kpi-card .kpi-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--cor-texto-secundario);
+}
+
+.kpi-card .kpi-valor {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--cor-texto);
+}
 
 .relatorios-grid {
     display: grid;
@@ -216,13 +282,33 @@ input[type="date"] {
     gap: 1rem;
 }
 
+.dashboard-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-card .card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.chart-container {
+    position: relative;
+    height: 220px;
+}
+
+.chart-container--grande {
+    height: 260px;
+}
+
 .relatorio-scroll {
-    max-height: 420px;
+    max-height: 320px;
     overflow-y: auto;
 }
 
 .relatorio-scroll--grande {
-    max-height: 560px;
+    max-height: 480px;
 }
 
 .relatorio-scroll thead th {
@@ -231,9 +317,77 @@ input[type="date"] {
     z-index: 1;
 }
 
+.relatorio-estado {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+
+    padding: 2rem 1rem;
+    text-align: center;
+
+    color: var(--cor-texto-secundario);
+}
+
+.relatorio-estado .bi,
+.relatorio-estado svg {
+    font-size: 1.75rem;
+    opacity: 0.6;
+}
+
+.relatorio-estado-erro {
+    color: var(--cor-perigo);
+}
+
+.relatorio-estado-erro .relatorio-estado-titulo {
+    color: var(--cor-perigo);
+}
+
+.relatorio-estado-titulo {
+    font-weight: 600;
+    color: var(--cor-texto);
+}
+
+.relatorio-estado-descricao {
+    font-size: 0.875rem;
+    max-width: 320px;
+}
+
+.btn-atualizar.carregando .btn-atualizar-texto {
+    visibility: hidden;
+}
+
+.btn-atualizar .spinner-border {
+    display: none;
+}
+
+.btn-atualizar.carregando .spinner-border {
+    display: inline-block;
+    position: absolute;
+}
+
+.btn-atualizar {
+    position: relative;
+}
+
+@media (max-width: 1199.98px) {
+
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 991.98px) {
 
     .relatorios-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 575.98px) {
+
+    .kpi-grid {
         grid-template-columns: 1fr;
     }
 }

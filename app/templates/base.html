@@ -48,42 +48,42 @@
         <div class="navbar-nav me-auto">
 
             <a
-                class="nav-link text-light"
+                class="nav-link text-light {{ 'active' if request.url.path.startswith('/relatorios') }}"
                 href="/relatorios"
             >
                 Relatorios
             </a>
 
             <a
-                class="nav-link text-light"
+                class="nav-link text-light {{ 'active' if request.url.path.startswith('/funcionarios') }}"
                 href="/funcionarios"
             >
                 Funcionarios
             </a>
 
             <a
-                class="nav-link text-light"
+                class="nav-link text-light {{ 'active' if request.url.path.startswith('/jornais') }}"
                 href="/jornais"
             >
                 Jornais
             </a>
 
             <a
-                class="nav-link text-light"
+                class="nav-link text-light {{ 'active' if request.url.path.startswith('/edicoes') }}"
                 href="/edicoes"
             >
                 Edicoes
             </a>
 
             <a
-                class="nav-link text-light"
+                class="nav-link text-light {{ 'active' if request.url.path.startswith('/setores') }}"
                 href="/setores"
             >
                 Setores
             </a>
 
             <a
-                class="nav-link text-light"
+                class="nav-link text-light {{ 'active' if request.url.path.startswith('/materias') }}"
                 href="/materias"
             >
                 Materias
