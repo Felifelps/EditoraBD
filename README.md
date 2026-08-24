@@ -268,6 +268,20 @@ constraint `fk_editor_chefe_jornalista`.
 | cpf_jornalista | VARCHAR(11) | PK, FK → jornalista.cpf_jornalista | Jornalista autor/coautor. |
 | id_materia | INT | PK, FK → materia.id_materia | Matéria correspondente. |
 
+## Testes
+
+Testes de integração ponta a ponta (`tests/test_smoke.py`, com `pytest` + o
+`TestClient` do FastAPI) cobrem: carregamento das páginas principais, CRUD completo
+de uma entidade, a tela de Relatórios exibindo dados reais das 5 Views e o tratamento
+de erro para uma referência inválida (FK). Não usam mocks — rodam contra um Postgres
+de verdade.
+
+Pré-requisito: o banco acessível (`docker compose up -d db`, ou a stack completa).
+
+```bash
+uv run pytest
+```
+
 ## Estrutura
 
 ```
