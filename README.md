@@ -38,6 +38,7 @@ próprio servidor pelo FastAPI via Jinja2, então o frontend é servido na **mes
 Ao iniciar, a aplicação já roda as migrações pendentes automaticamente contra o `db`.
 
 Acesse em http://localhost:8000.
+Para teste usar email: "teste@editorabd.com" e senha: "senha123"
 
 Para derrubar os containers:
 
