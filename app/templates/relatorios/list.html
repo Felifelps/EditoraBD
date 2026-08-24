@@ -2,61 +2,346 @@
 
 {% block title %}Relatorios - Gestao Editorial{% endblock %}
 
-{% macro tabela(chave, titulo, colunas, relatorios, classe_scroll="relatorio-scroll") %}
-<div class="card shadow-sm border-0 h-100">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <h2 id="{{ chave }}-titulo" class="h6 mb-0">{{ titulo }}</h2>
-    </div>
-    <div class="card-body p-0">
-        {% set dados, erro = relatorios[chave] %}
-        {% if erro %}
-            <div class="alert alert-danger m-3" role="alert">{{ erro }}</div>
-        {% else %}
-            <div class="table-responsive {{ classe_scroll }}">
-                <table class="table table-striped table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            {% for coluna in colunas %}
-                                <th scope="col">{{ coluna|replace('_', ' ')|title }}</th>
-                            {% endfor %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for linha in dados %}
-                            <tr>
-                                {% for coluna in colunas %}
-                                    <td>{{ linha[coluna] if linha[coluna] is not none else '-' }}</td>
-                                {% endfor %}
-                            </tr>
-                        {% else %}
-                            <tr>
-                                <td class="text-muted text-center py-4" colspan="{{ colunas|length }}">Nenhum registro encontrado.</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% endif %}
-    </div>
+{% macro icone_vazio() %}
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M8 15l3-3 2 2 4-4"></path></svg>
+{% endmacro %}
+
+{% macro icone_erro() %}
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.86l-8.2 14.2A1 1 0 0 0 3 19.6h18a1 1 0 0 0 .87-1.54l-8.2-14.2a1 1 0 0 0-1.74 0z"></path></svg>
+{% endmacro %}
+
+{% macro estado_erro(mensagem) %}
+<div class="relatorio-estado relatorio-estado-erro">
+    {{ icone_erro() }}
+    <span class="relatorio-estado-titulo">Não foi possível carregar</span>
+    <span class="relatorio-estado-descricao">{{ mensagem }}</span>
 </div>
+{% endmacro %}
+
+{% macro estado_vazio() %}
+<div class="relatorio-estado">
+    {{ icone_vazio() }}
+    <span class="relatorio-estado-titulo">Nenhum dado disponível</span>
+    <span class="relatorio-estado-descricao">Não existem registros para exibir neste momento.</span>
+</div>
+{% endmacro %}
+
+{% macro tabela(chave, colunas, relatorios, classe_scroll="relatorio-scroll") %}
+{% set dados, erro = relatorios[chave] %}
+{% if erro %}
+    {{ estado_erro(erro) }}
+{% elif not dados %}
+    {{ estado_vazio() }}
+{% else %}
+    <div class="table-responsive {{ classe_scroll }}">
+        <table class="table table-striped table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    {% for coluna in colunas %}
+                        <th scope="col">{{ coluna|replace('_', ' ')|title }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for linha in dados %}
+                    <tr>
+                        {% for coluna in colunas %}
+                            <td>{{ linha[coluna] if linha[coluna] is not none else '-' }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
 {% endmacro %}
 
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <div>
-        <h1 class="h3 mb-1">Relatorios</h1>
-        <p class="text-muted mb-0">Dados atualizados diretamente das views do banco.</p>
+        <h1 class="h3 mb-1">Relatórios</h1>
+        <p class="text-muted mb-0">Visão geral dos dados do sistema, direto das Views do banco.</p>
     </div>
-    <a class="btn btn-outline-primary" href="/relatorios">Atualizar</a>
+    <a class="btn btn-outline-primary btn-atualizar" href="/relatorios" id="btnAtualizar">
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        <span class="btn-atualizar-texto">Atualizar</span>
+    </a>
 </div>
+
+<!-- =====================================================
+     INDICADORES
+     ===================================================== -->
+
+<div class="kpi-grid mb-4">
+    <div class="kpi-card">
+        <span class="kpi-label">Jornais</span>
+        <span class="kpi-valor">{{ indicadores.jornais if indicadores.jornais is not none else '-' }}</span>
+    </div>
+    <div class="kpi-card">
+        <span class="kpi-label">Edições</span>
+        <span class="kpi-valor">{{ indicadores.edicoes if indicadores.edicoes is not none else '-' }}</span>
+    </div>
+    <div class="kpi-card">
+        <span class="kpi-label">Jornalistas</span>
+        <span class="kpi-valor">{{ indicadores.jornalistas if indicadores.jornalistas is not none else '-' }}</span>
+    </div>
+    <div class="kpi-card">
+        <span class="kpi-label">Matérias</span>
+        <span class="kpi-valor">{{ indicadores.materias if indicadores.materias is not none else '-' }}</span>
+    </div>
+</div>
+
+<!-- =====================================================
+     LINHA 1: EDICOES POR JORNAL | CARGA POR JORNALISTA
+     ===================================================== -->
 
 <div class="relatorios-grid mb-4">
-    {{ tabela("resumo_edicoes_jornal", "Resumo de edições por jornal", ["nome_jornal", "nome_diretor", "total_edicoes", "ultima_edicao"], relatorios) }}
-    {{ tabela("carga_materias_jornalista", "Carga de matérias por jornalista", ["cpf_jornalista", "nome_jornalista", "mtb", "total_materias", "materias_aprovadas", "materias_reprovadas", "materias_em_andamento"], relatorios) }}
-    {{ tabela("setores_editores", "Setores e editores-chefes", ["id_setor", "nome_setor", "descricao_setor", "cpf_editor_chefe", "nome_editor", "especialidades"], relatorios) }}
-    {{ tabela("funcionarios_detalhes", "Detalhes dos funcionários", ["cpf", "nome", "email", "telefone", "salario", "data_inicio_mandato", "mtb", "cargo"], relatorios) }}
+
+    <div class="card dashboard-card shadow-sm border-0 h-100">
+        <div class="card-header bg-white">
+            <h2 class="h6 mb-0">Edições por jornal</h2>
+        </div>
+        <div class="card-body">
+            {% set dados_resumo, erro_resumo = relatorios.resumo_edicoes_jornal %}
+            {% if erro_resumo %}
+                {{ estado_erro(erro_resumo) }}
+            {% elif not dados_resumo %}
+                {{ estado_vazio() }}
+            {% else %}
+                <div class="chart-container">
+                    <canvas id="graficoResumoEdicoes" role="img" aria-label="Ranking de edições por jornal"></canvas>
+                </div>
+                {{ tabela("resumo_edicoes_jornal", ["nome_jornal", "nome_diretor", "total_edicoes", "ultima_edicao"], relatorios) }}
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card dashboard-card shadow-sm border-0 h-100">
+        <div class="card-header bg-white">
+            <h2 class="h6 mb-0">Carga de matérias por jornalista</h2>
+        </div>
+        <div class="card-body">
+            {% set dados_carga, erro_carga = relatorios.carga_materias_jornalista %}
+            {% if erro_carga %}
+                {{ estado_erro(erro_carga) }}
+            {% elif not dados_carga %}
+                {{ estado_vazio() }}
+            {% else %}
+                <div class="chart-container">
+                    <canvas id="graficoCargaJornalista" role="img" aria-label="Ranking de matérias por jornalista, separado por status"></canvas>
+                </div>
+                {{ tabela("carga_materias_jornalista", ["nome_jornalista", "mtb", "total_materias", "materias_aprovadas", "materias_reprovadas", "materias_em_andamento"], relatorios) }}
+            {% endif %}
+        </div>
+    </div>
+
 </div>
 
-{{ tabela("materias_completas", "Catálogo completo de matérias", ["id_materia", "titulo", "data_materia", "status_texto", "nome_setor", "numero_edicao", "nome_jornal", "autores"], relatorios, "relatorio-scroll relatorio-scroll--grande") }}
+<!-- =====================================================
+     LINHA 2: ESPECIALIDADES | FUNCIONARIOS POR CARGO
+     ===================================================== -->
 
+<div class="relatorios-grid mb-4">
+
+    <div class="card dashboard-card shadow-sm border-0 h-100">
+        <div class="card-header bg-white">
+            <h2 class="h6 mb-0">Especialidades dos editores-chefe</h2>
+        </div>
+        <div class="card-body">
+            {% set dados_setores, erro_setores = relatorios.setores_editores %}
+            {% if erro_setores %}
+                {{ estado_erro(erro_setores) }}
+            {% elif not dados_setores %}
+                {{ estado_vazio() }}
+            {% else %}
+                <div class="chart-container">
+                    <canvas id="graficoEspecialidades" role="img" aria-label="Quantidade de setores cobertos por especialidade"></canvas>
+                </div>
+                {{ tabela("setores_editores", ["nome_setor", "nome_editor", "especialidades"], relatorios) }}
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card dashboard-card shadow-sm border-0 h-100">
+        <div class="card-header bg-white">
+            <h2 class="h6 mb-0">Funcionários por cargo</h2>
+        </div>
+        <div class="card-body">
+            {% set dados_func, erro_func = relatorios.funcionarios_detalhes %}
+            {% if erro_func %}
+                {{ estado_erro(erro_func) }}
+            {% elif not dados_func %}
+                {{ estado_vazio() }}
+            {% else %}
+                <div class="chart-container">
+                    <canvas id="graficoCargos" role="img" aria-label="Distribuição de funcionários por cargo"></canvas>
+                </div>
+                {{ tabela("funcionarios_detalhes", ["nome", "email", "cargo", "salario"], relatorios) }}
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<!-- =====================================================
+     LINHA 3: CATALOGO DE MATERIAS
+     ===================================================== -->
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white">
+        <h2 class="h6 mb-0">Catálogo completo de matérias</h2>
+    </div>
+    <div class="card-body p-0">
+        {{ tabela("materias_completas", ["id_materia", "titulo", "data_materia", "status_texto", "nome_setor", "numero_edicao", "nome_jornal", "autores"], relatorios, "relatorio-scroll relatorio-scroll--grande") }}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+    "use strict";
+
+    var estilo = getComputedStyle(document.documentElement);
+    var cor = function (nome) { return estilo.getPropertyValue(nome).trim(); };
+
+    var CORES = {
+        primaria: cor("--cor-primaria"),
+        sucesso: cor("--cor-sucesso"),
+        perigo: cor("--cor-perigo"),
+        aviso: cor("--cor-aviso"),
+        info: cor("--cor-info"),
+        roxo: cor("--cor-roxo"),
+        cinza: cor("--cor-texto-secundario"),
+    };
+
+    Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+    Chart.defaults.color = cor("--cor-texto-secundario");
+    Chart.defaults.plugins.legend.labels.usePointStyle = true;
+
+    var graficoResumoEdicoes = {{ graficos.resumo_edicoes_jornal | tojson }};
+    var graficoCargaJornalista = {{ graficos.carga_materias_jornalista | tojson }};
+    var graficoEspecialidades = {{ graficos.setores_editores | tojson }};
+    var graficoCargos = {{ graficos.funcionarios_detalhes | tojson }};
+
+    if (graficoResumoEdicoes && graficoResumoEdicoes.labels.length) {
+        new Chart(document.getElementById("graficoResumoEdicoes"), {
+            type: "bar",
+            data: {
+                labels: graficoResumoEdicoes.labels,
+                datasets: [{
+                    label: "Edições",
+                    data: graficoResumoEdicoes.totais,
+                    backgroundColor: CORES.primaria,
+                    borderRadius: 4,
+                    maxBarThickness: 22,
+                }],
+            },
+            options: {
+                indexAxis: "y",
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            afterLabel: function (item) {
+                                var i = item.dataIndex;
+                                return [
+                                    "Diretor: " + graficoResumoEdicoes.editores[i],
+                                    "Última edição: " + graficoResumoEdicoes.ultimas[i],
+                                ];
+                            },
+                        },
+                    },
+                },
+                scales: {
+                    x: { beginAtZero: true, ticks: { precision: 0 } },
+                },
+            },
+        });
+    }
+
+    if (graficoCargaJornalista && graficoCargaJornalista.labels.length) {
+        new Chart(document.getElementById("graficoCargaJornalista"), {
+            type: "bar",
+            data: {
+                labels: graficoCargaJornalista.labels,
+                datasets: [
+                    { label: "Aprovadas", data: graficoCargaJornalista.aprovadas, backgroundColor: CORES.sucesso },
+                    { label: "Em andamento", data: graficoCargaJornalista.em_andamento, backgroundColor: CORES.aviso },
+                    { label: "Reprovadas", data: graficoCargaJornalista.reprovadas, backgroundColor: CORES.perigo },
+                ],
+            },
+            options: {
+                indexAxis: "y",
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: "top", labels: { boxWidth: 10, boxHeight: 10 } },
+                },
+                scales: {
+                    x: { stacked: true, beginAtZero: true, ticks: { precision: 0 } },
+                    y: { stacked: true },
+                },
+            },
+        });
+    }
+
+    if (graficoEspecialidades && graficoEspecialidades.labels.length) {
+        new Chart(document.getElementById("graficoEspecialidades"), {
+            type: "bar",
+            data: {
+                labels: graficoEspecialidades.labels,
+                datasets: [{
+                    label: "Setores cobertos",
+                    data: graficoEspecialidades.totais,
+                    backgroundColor: CORES.roxo,
+                    borderRadius: 4,
+                    maxBarThickness: 22,
+                }],
+            },
+            options: {
+                indexAxis: "y",
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, ticks: { precision: 0 } },
+                },
+            },
+        });
+    }
+
+    if (graficoCargos && graficoCargos.labels.length) {
+        var coresCargo = { "Diretor": CORES.primaria, "Jornalista": CORES.info, "Editor-Chefe": CORES.roxo };
+        new Chart(document.getElementById("graficoCargos"), {
+            type: "doughnut",
+            data: {
+                labels: graficoCargos.labels,
+                datasets: [{
+                    data: graficoCargos.totais,
+                    backgroundColor: graficoCargos.labels.map(function (rotulo) { return coresCargo[rotulo] || CORES.cinza; }),
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: "bottom", labels: { boxWidth: 10, boxHeight: 10 } },
+                },
+            },
+        });
+    }
+
+    var botaoAtualizar = document.getElementById("btnAtualizar");
+    if (botaoAtualizar) {
+        botaoAtualizar.addEventListener("click", function () {
+            botaoAtualizar.classList.add("carregando");
+        });
+    }
+})();
+</script>
 {% endblock %}
