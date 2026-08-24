@@ -45,13 +45,13 @@
             Gestao Editorial
         </a>
 
-        <div class="navbar-nav">
+        <div class="navbar-nav me-auto">
 
             <a
                 class="nav-link text-light"
-                href="/"
+                href="/relatorios"
             >
-                Inicio
+                Relatorios
             </a>
 
             <a
@@ -89,14 +89,25 @@
                 Materias
             </a>
 
-            <a
-                class="nav-link text-light"
-                href="/relatorios"
-            >
-                Relatorios
-            </a>
+        </div>
+
+        {% if request.session.get("cpf") %}
+
+        <div class="d-flex align-items-center gap-2">
+
+            <span class="text-light small">
+                {{ request.session.get("nome") }}
+            </span>
+
+            <form method="post" action="/logout" class="m-0">
+                <button type="submit" class="btn btn-sm btn-outline-light">
+                    Sair
+                </button>
+            </form>
 
         </div>
+
+        {% endif %}
 
     </nav>
 
