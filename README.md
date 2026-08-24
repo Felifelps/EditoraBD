@@ -191,6 +191,7 @@ erDiagram
         date data_nascimento
         varchar email UK
         decimal salario
+        varchar senha_hash
     }
     DIRETOR {
         varchar cpf_diretor PK, FK
@@ -264,6 +265,7 @@ constraint `fk_editor_chefe_jornalista`.
 | telefone | VARCHAR(15) | - | Telefone com DDD. |
 | salario | DECIMAL(10,2) | CHECK ≥ 0 | Remuneração bruta mensal. |
 | idade | INT | - | Atributo derivado (não populado automaticamente hoje). |
+| senha_hash | VARCHAR(255) | - | Hash salgado (PBKDF2-HMAC-SHA256) da senha de login; nulo para funcionários sem acesso ao sistema. Ver seção [Login](#login). |
 
 ### Diretor (especializa Funcionario)
 
