@@ -202,3 +202,38 @@ def test_dados_dos_graficos_correspondem_as_views():
             cargos = repo.funcionarios_detalhes()
             grafico_cargos = _grafico_do_html(html, "graficoCargos")
             assert sum(grafico_cargos["totais"]) == len(cargos)
+
+
+def test_crud_pages_seguem_o_mesmo_padrao_visual():
+    """As 5 entidades usam o mesmo cabecalho de pagina e cartao de formulario."""
+    with TestClient(app) as client:
+        _logar(client)
+
+        paginas_lista = ["/funcionarios", "/jornais", "/edicoes", "/setores", "/materias"]
+        for path in paginas_lista:
+            resp = client.get(path)
+            assert resp.status_code == 200
+            assert "page-header" in resp.text, path
+            assert 'class="card shadow-sm border-0' in resp.text, path
+
+        paginas_form = ["/funcionarios/novo", "/jornais/novo", "/edicoes/novo", "/setores/novo", "/materias/novo"]
+        for path in paginas_form:
+            resp = client.get(path)
+            assert resp.status_code == 200
+            assert "page-header" in resp.text, path
+            assert "form-card-wrap" in resp.text, path
+            assert "form-card" in resp.text, path
+            assert "btn-outline-secondary" in resp.text, path  # botao Cancelar
+
+        # detalhe de um registro existente por entidade tambem usa o mesmo card
+        detalhes = [
+            "/funcionarios/10000000001",
+            "/jornais/Jornal Pernambuco".replace(" ", "%20"),
+            "/setores/1",
+            "/materias/1",
+        ]
+        for path in detalhes:
+            resp = client.get(path)
+            assert resp.status_code == 200
+            assert "detail-card" in resp.text, path
+            assert "detail-grid" in resp.text, path
