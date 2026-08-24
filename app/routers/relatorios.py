@@ -5,10 +5,11 @@ from psycopg import Connection
 
 from app.db.dependencies import get_conn
 from app.repositories.relatorios import RelatorioRepository
+from app.services.auth import obter_usuario_logado
 from app.templating import templates
 
 
-router = APIRouter(prefix="/relatorios")
+router = APIRouter(prefix="/relatorios", dependencies=[Depends(obter_usuario_logado)])
 logger = logging.getLogger(__name__)
 
 

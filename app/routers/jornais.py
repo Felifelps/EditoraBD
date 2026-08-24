@@ -3,10 +3,11 @@ from fastapi.responses import RedirectResponse
 
 from app.exceptions.jornais import JornalJaExisteError, JornalNaoEncontradoError
 from app.schemas.jornal import JornalCreate, JornalUpdate
+from app.services.auth import obter_usuario_logado
 from app.services.jornais import JornalService, get_jornal_service
 from app.templating import templates
 
-router = APIRouter(prefix="/jornais")
+router = APIRouter(prefix="/jornais", dependencies=[Depends(obter_usuario_logado)])
 
 
 @router.get("")

@@ -3,10 +3,11 @@ from fastapi.responses import RedirectResponse
 
 from app.exceptions.setores import SetorJaExisteError, SetorNaoEncontradoError
 from app.schemas.setor import SetorCreate, SetorUpdate
+from app.services.auth import obter_usuario_logado
 from app.services.setores import SetorService, get_setor_service
 from app.templating import templates
 
-router = APIRouter(prefix="/setores")
+router = APIRouter(prefix="/setores", dependencies=[Depends(obter_usuario_logado)])
 
 
 @router.get("")

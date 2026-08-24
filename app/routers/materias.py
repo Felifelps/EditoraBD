@@ -9,6 +9,7 @@ from app.exceptions.materias import (
     MateriaNaoEncontradaError,
 )
 from app.schemas.materias import MateriaAtualizar, MateriaCriar
+from app.services.auth import obter_usuario_logado
 from app.services.edicoes import EdicaoService, get_edicao_service
 from app.services.funcionarios import FuncionarioService, get_funcionario_service
 from app.services.jornais import JornalService, get_jornal_service
@@ -17,7 +18,7 @@ from app.services.setores import SetorService, get_setor_service
 from app.templating import templates
 
 
-router = APIRouter(prefix="/materias")
+router = APIRouter(prefix="/materias", dependencies=[Depends(obter_usuario_logado)])
 
 
 @router.get("")

@@ -3,10 +3,11 @@ from fastapi.responses import RedirectResponse
 
 from app.exceptions.edicoes import EdicaoJaExisteError, EdicaoNaoEncontradaError
 from app.schemas.edicao import EdicaoCreate, EdicaoUpdate
+from app.services.auth import obter_usuario_logado
 from app.services.edicoes import EdicaoService, get_edicao_service
 from app.templating import templates
 
-router = APIRouter(prefix="/edicoes")
+router = APIRouter(prefix="/edicoes", dependencies=[Depends(obter_usuario_logado)])
 
 
 @router.get("")

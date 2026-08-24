@@ -1,13 +1,17 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from psycopg.errors import CheckViolation, ForeignKeyViolation
+from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import get_settings
 from app.db.migrate import run_migrations
 from app.db.pool import build_pool
+from app.exceptions.auth import NaoAutenticadoError
 from app.routers import (
+    auth,
     edicoes,
     funcionarios,
     jornais,
@@ -15,6 +19,7 @@ from app.routers import (
     relatorios,
     setores,
 )
+from app.services.auth import obter_usuario_logado
 from app.templating import templates
 
 
@@ -39,18 +44,26 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(SessionMiddleware, secret_key=get_settings().session_secret)
+
 app.mount(
     "/static",
     StaticFiles(directory="app/static"),
     name="static",
 )
 
+app.include_router(auth.router)
 app.include_router(funcionarios.router)
 app.include_router(materias.router)
 app.include_router(jornais.router)
 app.include_router(edicoes.router)
 app.include_router(setores.router)
 app.include_router(relatorios.router)
+
+
+@app.exception_handler(NaoAutenticadoError)
+def nao_autenticado_handler(request: Request, exc: NaoAutenticadoError):
+    return RedirectResponse(url="/login", status_code=303)
 
 
 @app.exception_handler(ForeignKeyViolation)
@@ -74,9 +87,5 @@ def valor_invalido_handler(request: Request, exc: CheckViolation):
 
 
 @app.get("/")
-def home(request: Request):
-    return templates.TemplateResponse(
-        request,
-        "home.html",
-        {},
-    )
+def home(request: Request, usuario: dict = Depends(obter_usuario_logado)):
+    return RedirectResponse(url="/relatorios", status_code=303)

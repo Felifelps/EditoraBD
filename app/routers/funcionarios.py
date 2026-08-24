@@ -3,10 +3,11 @@ from fastapi.responses import RedirectResponse
 
 from app.exceptions.funcionarios import FuncionarioJaExisteError, FuncionarioNaoEncontradoError
 from app.schemas.funcionario import FuncionarioCreate, FuncionarioUpdate
+from app.services.auth import obter_usuario_logado
 from app.services.funcionarios import FuncionarioService, get_funcionario_service
 from app.templating import templates
 
-router = APIRouter(prefix="/funcionarios")
+router = APIRouter(prefix="/funcionarios", dependencies=[Depends(obter_usuario_logado)])
 
 
 @router.get("")
