@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
+from psycopg.errors import CheckViolation, ForeignKeyViolation
 
 from app.config import get_settings
 from app.db.migrate import run_migrations
@@ -50,6 +51,26 @@ app.include_router(jornais.router)
 app.include_router(edicoes.router)
 app.include_router(setores.router)
 app.include_router(relatorios.router)
+
+
+@app.exception_handler(ForeignKeyViolation)
+def referencia_invalida_handler(request: Request, exc: ForeignKeyViolation):
+    return templates.TemplateResponse(
+        request,
+        "erro.html",
+        {"mensagem": "Referência inválida: o registro relacionado informado não existe."},
+        status_code=400,
+    )
+
+
+@app.exception_handler(CheckViolation)
+def valor_invalido_handler(request: Request, exc: CheckViolation):
+    return templates.TemplateResponse(
+        request,
+        "erro.html",
+        {"mensagem": "Valor inválido para um dos campos informados."},
+        status_code=400,
+    )
 
 
 @app.get("/")
