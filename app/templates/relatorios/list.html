@@ -200,17 +200,51 @@
 </div>
 
 <!-- =====================================================
-     LINHA 3: CATALOGO DE MATERIAS
+     LINHA 3: CATALOGO DE MATERIAS | HISTORICO DE STATUS
      ===================================================== -->
 
-<div class="card shadow-sm border-0">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <h2 class="h6 mb-0">Catálogo completo de matérias</h2>
+<div class="relatorios-grid mb-4">
+
+    <div class="card dashboard-card shadow-sm border-0 h-100">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h2 class="h6 mb-0">Catálogo completo de matérias</h2>
 <div><a href="/relatorios/materias_completas/pdf" class="btn btn-sm btn-outline-secondary">Exportar PDF</a></div>
+        </div>
+        <div class="card-body">
+            {% set dados_materias, erro_materias = relatorios.materias_completas %}
+            {% if erro_materias %}
+                {{ estado_erro(erro_materias) }}
+            {% elif not dados_materias %}
+                {{ estado_vazio() }}
+            {% else %}
+                <div class="chart-container">
+                    <canvas id="graficoStatusMaterias" role="img" aria-label="Distribuição de matérias por status"></canvas>
+                </div>
+                {{ tabela("materias_completas", ["id_materia", "titulo", "data_materia", "status_texto", "nome_setor", "numero_edicao", "nome_jornal", "autores"], relatorios, "relatorio-scroll relatorio-scroll--grande") }}
+            {% endif %}
+        </div>
     </div>
-    <div class="card-body p-0">
-        {{ tabela("materias_completas", ["id_materia", "titulo", "data_materia", "status_texto", "nome_setor", "numero_edicao", "nome_jornal", "autores"], relatorios, "relatorio-scroll relatorio-scroll--grande") }}
+
+    <div class="card dashboard-card shadow-sm border-0 h-100">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h2 class="h6 mb-0">Histórico de status de matéria</h2>
+<div><a href="/relatorios/historico_status_materia/pdf" class="btn btn-sm btn-outline-secondary">Exportar PDF</a></div>
+        </div>
+        <div class="card-body">
+            {% set dados_historico, erro_historico = relatorios.historico_status_materia %}
+            {% if erro_historico %}
+                {{ estado_erro(erro_historico) }}
+            {% elif not dados_historico %}
+                {{ estado_vazio() }}
+            {% else %}
+                <div class="chart-container">
+                    <canvas id="graficoHistoricoStatus" role="img" aria-label="Quantidade de transições por status novo"></canvas>
+                </div>
+                {{ tabela("historico_status_materia", ["titulo", "status_anterior_texto", "status_novo_texto", "alterado_em"], relatorios, "relatorio-scroll relatorio-scroll--grande") }}
+            {% endif %}
+        </div>
     </div>
+
 </div>
 
 {% endblock %}
@@ -242,6 +276,9 @@
     var graficoCargaJornalista = {{ graficos.carga_materias_jornalista | tojson }};
     var graficoEspecialidades = {{ graficos.setores_editores | tojson }};
     var graficoCargos = {{ graficos.funcionarios_detalhes | tojson }};
+    var graficoStatusMaterias = {{ graficos.materias_completas | tojson }};
+    var graficoHistoricoStatus = {{ graficos.historico_status_materia | tojson }};
+    var CORES_STATUS = { "Aprovada": CORES.sucesso, "Em Andamento": CORES.aviso, "Reprovada": CORES.perigo };
 
     if (graficoResumoEdicoes && graficoResumoEdicoes.labels.length) {
         new Chart(document.getElementById("graficoResumoEdicoes"), {
@@ -348,6 +385,51 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: { position: "bottom", labels: { boxWidth: 10, boxHeight: 10 } },
+                },
+            },
+        });
+    }
+
+    if (graficoStatusMaterias && graficoStatusMaterias.labels.length) {
+        new Chart(document.getElementById("graficoStatusMaterias"), {
+            type: "doughnut",
+            data: {
+                labels: graficoStatusMaterias.labels,
+                datasets: [{
+                    data: graficoStatusMaterias.totais,
+                    backgroundColor: graficoStatusMaterias.labels.map(function (rotulo) { return CORES_STATUS[rotulo] || CORES.cinza; }),
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: "bottom", labels: { boxWidth: 10, boxHeight: 10 } },
+                },
+            },
+        });
+    }
+
+    if (graficoHistoricoStatus && graficoHistoricoStatus.labels.length) {
+        new Chart(document.getElementById("graficoHistoricoStatus"), {
+            type: "bar",
+            data: {
+                labels: graficoHistoricoStatus.labels,
+                datasets: [{
+                    label: "Transições",
+                    data: graficoHistoricoStatus.totais,
+                    backgroundColor: graficoHistoricoStatus.labels.map(function (rotulo) { return CORES_STATUS[rotulo] || CORES.cinza; }),
+                    borderRadius: 4,
+                    maxBarThickness: 22,
+                }],
+            },
+            options: {
+                indexAxis: "y",
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, ticks: { precision: 0 } },
                 },
             },
         });
