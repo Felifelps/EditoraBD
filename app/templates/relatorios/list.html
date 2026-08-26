@@ -100,9 +100,13 @@
     <div class="card dashboard-card shadow-sm border-0 h-100">
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
             <h2 class="h6 mb-0">Edições por jornal</h2>
-            {% if relatorios.resumo_edicoes_jornal[0] and relatorios.resumo_edicoes_jornal[0]|length > 10 %}
-                <span class="badge text-bg-light border">Top 10</span>
-            {% endif %}
+            
+<div>
+{% if relatorios.resumo_edicoes_jornal[0] and relatorios.resumo_edicoes_jornal[0]|length > 10 %}
+<span class="badge text-bg-light border me-2">Top 10</span>
+{% endif %}
+<a href="/relatorios/resumo_edicoes_jornal/pdf" class="btn btn-sm btn-outline-secondary">Exportar PDF</a>
+</div>
         </div>
         <div class="card-body">
             {% set dados_resumo, erro_resumo = relatorios.resumo_edicoes_jornal %}
@@ -122,9 +126,13 @@
     <div class="card dashboard-card shadow-sm border-0 h-100">
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
             <h2 class="h6 mb-0">Carga de matérias por jornalista</h2>
-            {% if relatorios.carga_materias_jornalista[0] and relatorios.carga_materias_jornalista[0]|length > 10 %}
-                <span class="badge text-bg-light border">Top 10</span>
-            {% endif %}
+            
+<div>
+{% if relatorios.carga_materias_jornalista[0] and relatorios.carga_materias_jornalista[0]|length > 10 %}
+<span class="badge text-bg-light border me-2">Top 10</span>
+{% endif %}
+<a href="/relatorios/carga_materias_jornalista/pdf" class="btn btn-sm btn-outline-secondary">Exportar PDF</a>
+</div>
         </div>
         <div class="card-body">
             {% set dados_carga, erro_carga = relatorios.carga_materias_jornalista %}
@@ -150,8 +158,9 @@
 <div class="relatorios-grid mb-4">
 
     <div class="card dashboard-card shadow-sm border-0 h-100">
-        <div class="card-header bg-white">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
             <h2 class="h6 mb-0">Especialidades dos editores-chefe</h2>
+<div><a href="/relatorios/setores_editores/pdf" class="btn btn-sm btn-outline-secondary">Exportar PDF</a></div>
         </div>
         <div class="card-body">
             {% set dados_setores, erro_setores = relatorios.setores_editores %}
@@ -169,8 +178,9 @@
     </div>
 
     <div class="card dashboard-card shadow-sm border-0 h-100">
-        <div class="card-header bg-white">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
             <h2 class="h6 mb-0">Funcionários por cargo</h2>
+<div><a href="/relatorios/funcionarios_detalhes/pdf" class="btn btn-sm btn-outline-secondary">Exportar PDF</a></div>
         </div>
         <div class="card-body">
             {% set dados_func, erro_func = relatorios.funcionarios_detalhes %}
@@ -194,8 +204,9 @@
      ===================================================== -->
 
 <div class="card shadow-sm border-0">
-    <div class="card-header bg-white">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
         <h2 class="h6 mb-0">Catálogo completo de matérias</h2>
+<div><a href="/relatorios/materias_completas/pdf" class="btn btn-sm btn-outline-secondary">Exportar PDF</a></div>
     </div>
     <div class="card-body p-0">
         {{ tabela("materias_completas", ["id_materia", "titulo", "data_materia", "status_texto", "nome_setor", "numero_edicao", "nome_jornal", "autores"], relatorios, "relatorio-scroll relatorio-scroll--grande") }}
