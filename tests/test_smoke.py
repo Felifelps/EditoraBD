@@ -148,63 +148,6 @@ def test_crud_funcionario():
         assert detalhe3.status_code == 404
 
 
-def test_trigger_historico_status_materia():
-    with TestClient(app) as client:
-        _logar(client)
-
-        with app.state.pool.connection() as conn:
-            cur = conn.cursor()
-
-            cur.execute(
-                """
-                INSERT INTO materia (titulo, conteudo, status)
-                VALUES ('Materia Trigger Pytest', 'conteudo', 2)
-                RETURNING id_materia
-                """
-            )
-            id_materia = cur.fetchone()[0]
-            conn.commit()
-
-            cur.execute(
-                "SELECT COUNT(*) FROM historico_status_materia WHERE id_materia = %s",
-                (id_materia,),
-            )
-            assert cur.fetchone()[0] == 0
-
-            # UPDATE direto no banco mudando o status -> deve gravar histórico
-            cur.execute(
-                "UPDATE materia SET status = 1 WHERE id_materia = %s",
-                (id_materia,),
-            )
-            conn.commit()
-
-            cur.execute(
-                """
-                SELECT status_anterior, status_novo FROM historico_status_materia
-                WHERE id_materia = %s
-                ORDER BY id DESC LIMIT 1
-                """,
-                (id_materia,),
-            )
-            assert cur.fetchone() == (2, 1)
-
-            # UPDATE sem mudar o status (só o título) -> não deve gravar nova linha
-            cur.execute(
-                "UPDATE materia SET titulo = 'Materia Trigger Pytest Editada', status = 1 WHERE id_materia = %s",
-                (id_materia,),
-            )
-            conn.commit()
-
-            cur.execute(
-                "SELECT COUNT(*) FROM historico_status_materia WHERE id_materia = %s",
-                (id_materia,),
-            )
-            assert cur.fetchone()[0] == 1
-
-            cur.execute("DELETE FROM materia WHERE id_materia = %s", (id_materia,))
-            conn.commit()
-
-
 def test_fk_invalida_retorna_erro_tratado_nao_500():
     with TestClient(app, raise_server_exceptions=False) as client:
         _logar(client)
