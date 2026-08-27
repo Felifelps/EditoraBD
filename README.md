@@ -366,6 +366,59 @@ constraint `fk_editor_chefe_jornalista`.
 | cpf_jornalista | VARCHAR(11) | PK, FK → jornalista.cpf_jornalista | Jornalista autor/coautor. |
 | id_materia | INT | PK, FK → materia.id_materia | Matéria correspondente. |
 
+## Trigger
+
+`migrations/0005_trigger_historico_status_materia.sql` cria a única trigger do banco,
+com foco em **auditoria**: registrar toda mudança de status de uma matéria, sem
+depender de nenhuma lógica no backend — funciona mesmo que o `UPDATE` seja feito
+direto no banco, fora da aplicação.
+
+| | |
+|---|---|
+| Nome | `trg_historico_status_materia` |
+| Dispara em | `AFTER UPDATE OF status ON materia`, `FOR EACH ROW` |
+| Função associada | `fn_registrar_historico_status_materia()` |
+| Tabela de auditoria | `historico_status_materia` (`id_materia`, `status_anterior`, `status_novo`, `alterado_em`) |
+
+**Regra de negócio:** sempre que `materia.status` muda de valor (comparação
+`OLD.status IS DISTINCT FROM NEW.status`, para não gravar nada em updates que não
+afetam o status), a trigger insere uma linha em `historico_status_materia` com o
+status anterior, o novo status e o timestamp da alteração. Isso existe para dar
+rastreabilidade ao fluxo editorial (quem aprovou/reprovou o quê e quando fica
+registrado de forma imutável, independente de quem ou o quê alterou a matéria),
+sem exigir nenhuma alteração no código da aplicação para ser mantido.
+
+### Como testar
+
+**Via UI** — aprovando/reprovando uma matéria:
+
+1. Acesse `/materias`, abra uma matéria existente e clique em "Editar".
+2. Troque o campo "Status" (ex.: de "Em Andamento" para "Aprovada" ou "Reprovada") e
+   salve.
+3. Confirme que a trigger disparou consultando a tabela de auditoria (via SQL, abaixo)
+   — deve existir uma linha nova para aquele `id_materia`.
+
+**Via SQL direto** — sem passar pela aplicação:
+
+```bash
+docker compose exec db psql -U root -d root
+```
+
+```sql
+-- estado antes: quantas linhas de historico a materia 1 ja tem
+SELECT * FROM historico_status_materia WHERE id_materia = 1 ORDER BY alterado_em DESC;
+
+-- dispara a trigger com um UPDATE direto no banco (troque o valor para algo
+-- diferente do status atual da materia)
+UPDATE materia SET status = 1 WHERE id_materia = 1;
+
+-- confirma que uma nova linha foi registrada automaticamente
+SELECT * FROM historico_status_materia WHERE id_materia = 1 ORDER BY alterado_em DESC;
+```
+
+Rodar o mesmo `UPDATE` de novo com o mesmo valor de `status` (sem mudança real) não
+gera uma nova linha — a trigger só registra transições efetivas de status.
+
 ## Testes
 
 Testes de integração ponta a ponta (`tests/test_smoke.py`, com `pytest` + o
