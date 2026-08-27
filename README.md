@@ -306,103 +306,30 @@ todo editor-chefe é, por definição, um jornalista, o que permite que ele apar
 `alocacao_jornalista_materia` como autor. Ver `migrations/0001_create_tables.sql`,
 constraint `fk_editor_chefe_jornalista`.
 
-> Os arquivos `Diagrama Lógico UML.pdf` e `Dicionário de Dados.pdf`, na raiz do
-> repositório, foram produzidos na entrega anterior e ainda descrevem `Editor_Chefe`
-> como especialização direta de `Funcionario` — ficaram desatualizados após a correção
-> acima. O diagrama e o dicionário desta seção do README refletem o schema atual
-> (`migrations/0001_create_tables.sql`) e devem ser tratados como a fonte da verdade
-> até que os PDFs sejam regerados.
+> O arquivo `Diagrama Lógico UML.pdf`, na raiz do repositório, foi produzido na entrega
+> anterior e ainda descreve `Editor_Chefe` como especialização direta de `Funcionario` —
+> ficou desatualizado após a correção acima. O diagrama Mermaid desta seção reflete o
+> schema atual (`migrations/0001_create_tables.sql`) e deve ser tratado como a fonte da
+> verdade. O `Dicionário de Dados.pdf` já foi regerado a partir das migrations atuais.
 
 ## Dicionário de Dados
 
-### Funcionario (superclasse)
+O dicionário de dados completo está no arquivo
+**[`Dicionário de Dados.pdf`](./Dicionário%20de%20Dados.pdf)**, na raiz do repositório.
+Ele foi **regerado a partir das `migrations/*.sql` atuais** (substitui a versão da entrega
+anterior, que estava desatualizada) e cobre:
 
-| Atributo | Tipo | Restrições | Descrição |
-|---|---|---|---|
-| cpf | VARCHAR(11) | PK, NOT NULL | CPF do funcionário (apenas números). |
-| nome | VARCHAR(100) | NOT NULL | Nome completo. |
-| rua | VARCHAR(100) | - | Logradouro do endereço. |
-| cep | VARCHAR(8) | - | CEP (apenas números). |
-| numero | VARCHAR(10) | - | Número/complemento do endereço. |
-| data_nascimento | DATE | CHECK ≤ data atual | Data de nascimento. |
-| email | VARCHAR(100) | UNIQUE, NOT NULL | E-mail de contato. |
-| telefone | VARCHAR(15) | - | Telefone com DDD. |
-| salario | DECIMAL(10,2) | CHECK ≥ 0 | Remuneração bruta mensal. |
-| idade | INT | - | Atributo derivado (não populado automaticamente hoje). |
-| senha_hash | VARCHAR(255) | - | Hash salgado (PBKDF2-HMAC-SHA256) da senha de login; nulo para funcionários sem acesso ao sistema. Ver seção [Login](#login). |
+- as **11 tabelas** do domínio (`funcionario` e os subtipos `diretor` / `jornalista` /
+  `editor_chefe`, `editor_especialidade`, `jornal`, `edicao`, `setor`, `materia`,
+  `alocacao_jornalista_materia` e `historico_status_materia`) — atributos, tipos,
+  PKs/FKs e CHECK constraints;
+- as **6 Views** de relatório (`vw_resumo_edicoes_jornal`, `vw_carga_materias_jornalista`,
+  `vw_setores_editores`, `vw_funcionarios_detalhes`, `vw_materias_completas`,
+  `vw_historico_status_materia`) — colunas, tipos e semântica;
+- a tabela de controle de migrações `schema_migrations`.
 
-### Diretor (especializa Funcionario)
-
-| Atributo | Tipo | Restrições | Descrição |
-|---|---|---|---|
-| cpf_diretor | VARCHAR(11) | PK, FK → funcionario.cpf | Identifica o diretor. |
-| data_inicio_mandato | DATE | CHECK ≤ data atual | Início do mandato. |
-
-### Jornalista (especializa Funcionario)
-
-| Atributo | Tipo | Restrições | Descrição |
-|---|---|---|---|
-| cpf_jornalista | VARCHAR(11) | PK, FK → funcionario.cpf | Identifica o jornalista. |
-| mtb | VARCHAR(20) | - | Registro profissional (MTb). |
-
-### Editor_Chefe (especializa Jornalista)
-
-| Atributo | Tipo | Restrições | Descrição |
-|---|---|---|---|
-| cpf_editor | VARCHAR(11) | PK, FK → jornalista.cpf_jornalista | Todo editor-chefe é um jornalista. |
-
-### Editor_Especialidade (atributo multivalorado de Editor_Chefe)
-
-| Atributo | Tipo | Restrições | Descrição |
-|---|---|---|---|
-| cpf_editor | VARCHAR(11) | PK, FK → editor_chefe.cpf_editor | Editor-chefe associado. |
-| especialidade | VARCHAR(50) | PK | Área de especialização (ex.: Política, Economia). |
-
-### Jornal
-
-| Atributo | Tipo | Restrições | Descrição |
-|---|---|---|---|
-| nome_jornal | VARCHAR(100) | PK | Nome do veículo. |
-| cpf_diretor | VARCHAR(11) | FK → diretor.cpf_diretor | Diretor responsável (opcional). |
-
-### Edicao (entidade fraca de Jornal)
-
-| Atributo | Tipo | Restrições | Descrição |
-|---|---|---|---|
-| nome_jornal | VARCHAR(100) | PK, FK → jornal.nome_jornal | Jornal ao qual pertence. |
-| numero_edicao | INT | PK | Número sequencial da edição. |
-| data | DATE | - | Data de circulação. |
-
-### Setor
-
-| Atributo | Tipo | Restrições | Descrição |
-|---|---|---|---|
-| id_setor | INT | PK | Identificador da editoria. |
-| nome | VARCHAR(100) | - | Nome da editoria. |
-| descricao | TEXT | - | Escopo de cobertura. |
-| cpf_editor_chefe | VARCHAR(11) | UNIQUE, FK → editor_chefe.cpf_editor | Editor-chefe responsável (1:1, opcional). |
-
-### Materia
-
-| Atributo | Tipo | Restrições | Descrição |
-|---|---|---|---|
-| id_materia | SERIAL | PK | Identificador autoincremental. |
-| titulo | VARCHAR(200) | - | Manchete. |
-| subtitulo | VARCHAR(200) | - | Linha fina. |
-| resumo | TEXT | - | Lead/síntese. |
-| conteudo | TEXT | - | Texto integral. |
-| data | DATE | - | Data de elaboração/publicação. |
-| status | INT | NOT NULL, DEFAULT 2, CHECK IN (0,1,2) | Etapa editorial: `0` = Reprovada, `1` = Aprovada, `2` = Em Andamento. |
-| nome_jornal | VARCHAR(100) | FK (composta c/ numero_edicao) → edicao | Edição de veiculação (opcional). |
-| numero_edicao | INT | FK (composta) → edicao | Edição de veiculação (opcional). |
-| id_setor | INT | FK → setor.id_setor | Editoria responsável (opcional). |
-
-### Alocacao_Jornalista_Materia (associativa N:N)
-
-| Atributo | Tipo | Restrições | Descrição |
-|---|---|---|---|
-| cpf_jornalista | VARCHAR(11) | PK, FK → jornalista.cpf_jornalista | Jornalista autor/coautor. |
-| id_materia | INT | PK, FK → materia.id_materia | Matéria correspondente. |
+A visão geral de entidades e relacionamentos está no diagrama da seção
+[Esquema Conceitual](#esquema-conceitual).
 
 ## Trigger
 
