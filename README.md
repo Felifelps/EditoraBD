@@ -83,6 +83,12 @@ A aplicação exige login de funcionário para acessar qualquer página — tent
 `http://localhost:8000/` (ou qualquer rota interna) sem estar autenticado redireciona
 automaticamente para `http://localhost:8000/login`.
 
+Qualquer **URL sem rota correspondente** (endereço digitado errado) também redireciona:
+para `/login` se não houver sessão, ou para `/relatorios` se o usuário estiver logado
+— nunca mostra a página de erro 404 padrão. É uma rota catch-all registrada por último
+em `app/main.py`, então só pega o que nenhum router tratou; um recurso inexistente numa
+rota real (ex.: `/funcionarios/<cpf que não existe>`) continua respondendo `404`.
+
 **Autenticação:** e-mail + senha do funcionário. A senha é validada no backend contra
 um hash salgado (PBKDF2-HMAC-SHA256, `app/security.py`) guardado na nova coluna
 `funcionario.senha_hash` — nunca em texto puro. A sessão é mantida por um cookie

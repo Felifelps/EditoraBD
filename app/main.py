@@ -89,3 +89,13 @@ def valor_invalido_handler(request: Request, exc: CheckViolation):
 @app.get("/")
 def home(request: Request, usuario: dict = Depends(obter_usuario_logado)):
     return RedirectResponse(url="/relatorios", status_code=303)
+
+
+@app.get("/{caminho_invalido:path}", include_in_schema=False)
+def rota_nao_encontrada(request: Request, caminho_invalido: str):
+    """Qualquer URL sem rota correspondente cai aqui (registrada por ultimo, entao
+    so pega o que nenhum router tratou): redireciona para /relatorios se houver
+    sessao autenticada, senao para /login."""
+    if request.session.get("cpf"):
+        return RedirectResponse(url="/relatorios", status_code=303)
+    return RedirectResponse(url="/login", status_code=303)
