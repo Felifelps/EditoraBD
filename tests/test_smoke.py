@@ -21,7 +21,7 @@ SENHA_TESTE = "senha123"
 
 
 def _grafico_do_html(html: str, variavel: str) -> dict:
-    match = re.search(rf"var {variavel} = (\{{.*?\}});", html, re.S)
+    match = re.search(rf"var {variavel}\s*=\s*(\{{.*?\}});", html, re.S)
     assert match, f"variavel {variavel} nao encontrada no HTML"
     return json.loads(match.group(1))
 
