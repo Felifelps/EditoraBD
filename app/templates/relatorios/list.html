@@ -272,12 +272,6 @@
 
             <div class="d-flex align-items-center gap-2">
 
-                <a
-                    href="/relatorios/resumo_edicoes_jornal/csv"
-                    class="btn btn-sm btn-outline-secondary">
-                    Exportar CSV
-                </a>
-
                 {% if relatorios.resumo_edicoes_jornal[0]
                       and relatorios.resumo_edicoes_jornal[0]|length > 10 %}
 
@@ -286,6 +280,12 @@
                     </span>
 
                 {% endif %}
+
+                <a
+                    href="/relatorios/resumo_edicoes_jornal/csv"
+                    class="btn btn-sm btn-outline-secondary">
+                    Exportar CSV
+                </a>
 
                 <a
                     href="/relatorios/resumo_edicoes_jornal/pdf"
@@ -358,12 +358,6 @@
 
             <div class="d-flex align-items-center gap-2">
 
-                <a
-                    href="/relatorios/carga_materias_jornalista/csv"
-                    class="btn btn-sm btn-outline-secondary">
-                    Exportar CSV
-                </a>
-
                 {% if relatorios.carga_materias_jornalista[0]
                       and relatorios.carga_materias_jornalista[0]|length > 10 %}
 
@@ -372,6 +366,12 @@
                     </span>
 
                 {% endif %}
+
+                <a
+                    href="/relatorios/carga_materias_jornalista/csv"
+                    class="btn btn-sm btn-outline-secondary">
+                    Exportar CSV
+                </a>
 
                 <a
                     href="/relatorios/carga_materias_jornalista/pdf"

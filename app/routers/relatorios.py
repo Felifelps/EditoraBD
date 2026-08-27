@@ -457,10 +457,10 @@ def _valor_csv(valor):
         valor,
         (date, datetime),
     ):
-        return valor.isoformat()
+        return valor.strftime("%d/%m/%Y")
 
     if isinstance(valor, Decimal):
-        return str(valor)
+        return str(valor).replace(".", ",")
 
     return valor
 
@@ -504,9 +504,13 @@ def exportar_csv(
     arquivo = io.StringIO(
         newline=""
     )
+    
+    # Injeta o BOM (Byte Order Mark) do UTF-8 para o Excel reconhecer acentuação
+    arquivo.write('\ufeff')
 
     escritor = csv.writer(
         arquivo,
+        delimiter=";",
         lineterminator="\n",
     )
 
