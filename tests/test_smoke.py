@@ -39,6 +39,25 @@ def test_paginas_principais_exigem_login():
             assert resp.headers["location"] == "/login"
 
 
+def test_url_inexistente_redireciona_conforme_sessao():
+    with TestClient(app, follow_redirects=False) as client:
+        # sem sessao: qualquer URL sem rota cai no /login
+        for path in ("/xpto", "/foo/bar", "/relatoriozzz", "/admin"):
+            resp = client.get(path)
+            assert resp.status_code == 303, f"{path} -> {resp.status_code}"
+            assert resp.headers["location"] == "/login"
+
+        # com sessao: qualquer URL sem rota cai no /relatorios
+        _logar(client)
+        for path in ("/xpto", "/foo/bar", "/relatoriozzz", "/admin"):
+            resp = client.get(path)
+            assert resp.status_code == 303, f"{path} -> {resp.status_code}"
+            assert resp.headers["location"] == "/relatorios"
+
+        # rota real com recurso inexistente continua 404 (nao vira redirect)
+        assert client.get("/funcionarios/99999999999").status_code == 404
+
+
 def test_login_com_credenciais_invalidas():
     with TestClient(app) as client:
         resp = client.post("/login", data={"email": EMAIL_TESTE, "senha": "senha-errada"})
