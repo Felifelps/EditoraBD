@@ -75,21 +75,24 @@ def test_logout_revoga_acesso():
         assert resp.headers["location"] == "/login"
 
 
-def test_dashboard_de_relatorios_exibe_as_5_views():
+def test_dashboard_de_relatorios_exibe_as_6_views():
     with TestClient(app) as client:
         _logar(client)
         resp = client.get("/relatorios")
         assert resp.status_code == 200
 
-        # as 5 views continuam representadas: 4 em gráfico + tabela, 1 só em tabela
+        # as 6 views representadas, todas com grafico + tabela
         for canvas_id in (
             "graficoResumoEdicoes",
             "graficoCargaJornalista",
             "graficoEspecialidades",
             "graficoCargos",
+            "graficoStatusMaterias",
+            "graficoHistoricoStatus",
         ):
             assert f'id="{canvas_id}"' in resp.text
         assert "Catálogo completo de matérias" in resp.text
+        assert "Histórico de status de matéria" in resp.text
 
         # indicadores (KPIs) calculados a partir dos dados das views
         assert "kpi-grid" in resp.text
@@ -146,6 +149,50 @@ def test_crud_funcionario():
 
         detalhe3 = client.get(f"/funcionarios/{cpf}")
         assert detalhe3.status_code == 404
+
+
+def test_atualizar_status_materia():
+    with TestClient(app, follow_redirects=False) as client:
+        _logar(client)
+
+        detalhe = client.get("/materias/1")
+        assert detalhe.status_code == 200
+        assert "Aprovar" in detalhe.text
+        assert "Reprovar" in detalhe.text
+        assert "Em Andamento" in detalhe.text
+
+        aprovar = client.post("/materias/1/status", data={"status": 1})
+        assert aprovar.status_code == 303
+        assert aprovar.headers["location"] == "/materias/1"
+
+        detalhe_aprovada = client.get("/materias/1")
+        assert "status-aprovada" in detalhe_aprovada.text
+
+        reprovar = client.post("/materias/1/status", data={"status": 0})
+        assert reprovar.status_code == 303
+
+        detalhe_reprovada = client.get("/materias/1")
+        assert "status-reprovada" in detalhe_reprovada.text
+
+        em_andamento = client.post("/materias/1/status", data={"status": 2})
+        assert em_andamento.status_code == 303
+
+        detalhe_em_andamento = client.get("/materias/1")
+        assert "status-em-andamento" in detalhe_em_andamento.text
+
+
+def test_atualizar_status_materia_valor_invalido():
+    with TestClient(app) as client:
+        _logar(client)
+        resp = client.post("/materias/1/status", data={"status": 9})
+        assert resp.status_code == 400
+
+
+def test_atualizar_status_materia_inexistente_retorna_404():
+    with TestClient(app) as client:
+        _logar(client)
+        resp = client.post("/materias/999999/status", data={"status": 1})
+        assert resp.status_code == 404
 
 
 def test_fk_invalida_retorna_erro_tratado_nao_500():
