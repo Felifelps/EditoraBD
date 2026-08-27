@@ -135,6 +135,11 @@ tratados como o mesmo mecanismo de migração.
 - `migrations/0006_view_historico_status_materia.sql` — DDL: cria a 6ª View,
   `vw_historico_status_materia`, que traduz os códigos de status da tabela de auditoria
   para texto e junta o título da matéria (usada no relatório de histórico de status).
+- `migrations/0007_seed_historico_status_materia.sql` — DML: exercita a trigger
+  `trg_historico_status_materia` fazendo cada uma de 12 matérias percorrer os outros
+  dois status e **voltar ao status original** (o estado final do seed não muda). Assim o
+  relatório de histórico de status já vem populado logo após o `docker compose up`, sem
+  depender de o usuário aprovar/reprovar algo antes.
 
 Esses arquivos ficam em `migrations/*.sql` e são aplicados **automaticamente, em
 ordem, toda vez que a aplicação sobe** — ver `app/db/migrate.py`, chamado no `lifespan`
@@ -148,7 +153,7 @@ Ou seja: basta iniciar a app que o schema e os dados já ficam em dia, sem coman
 manual de migração.
 
 Para adicionar uma nova migração (schema ou dados), crie um arquivo novo em
-`migrations/` seguindo o padrão de numeração (`0007_algo.sql`) — ele será aplicado no
+`migrations/` seguindo o padrão de numeração (`0008_algo.sql`) — ele será aplicado no
 próximo start da app.
 
 ## Views SQL e Relatórios
@@ -438,11 +443,13 @@ docker compose exec db psql -U root -d root
 ```
 
 ```sql
--- estado antes: quantas linhas de historico a materia 1 ja tem
+-- estado antes: o historico ja vem populado pelo seed (migration 0007), entao a
+-- materia 1 costuma ter algumas linhas aqui — anote a contagem atual
 SELECT * FROM historico_status_materia WHERE id_materia = 1 ORDER BY alterado_em DESC;
+SELECT status FROM materia WHERE id_materia = 1;  -- status atual
 
--- dispara a trigger com um UPDATE direto no banco (troque o valor para algo
--- diferente do status atual da materia)
+-- dispara a trigger com um UPDATE direto no banco (use um valor DIFERENTE do
+-- status atual mostrado acima; 0 = Reprovada, 1 = Aprovada, 2 = Em Andamento)
 UPDATE materia SET status = 1 WHERE id_materia = 1;
 
 -- confirma que uma nova linha foi registrada automaticamente
