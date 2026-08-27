@@ -55,6 +55,16 @@ class RelatorioRepository:
             """
         )
 
+    def historico_status_materia(self) -> list[dict]:
+        return self._buscar(
+            """
+            SELECT id, id_materia, titulo, status_anterior_texto,
+                   status_novo_texto, alterado_em
+            FROM vw_historico_status_materia
+            ORDER BY alterado_em DESC
+            """
+        )
+
     def _buscar(self, query: str) -> list[dict]:
         with self.conn.cursor(row_factory=dict_row) as cur:
             cur.execute(query)

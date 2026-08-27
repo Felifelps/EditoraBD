@@ -77,6 +77,28 @@ def _grafico_cargos(linhas: list[dict]) -> dict:
     }
 
 
+def _grafico_status_materias(linhas: list[dict]) -> dict:
+    contagem: dict[str, int] = {}
+    for linha in linhas:
+        status = linha["status_texto"] or "Sem status"
+        contagem[status] = contagem.get(status, 0) + 1
+    return {
+        "labels": list(contagem.keys()),
+        "totais": list(contagem.values()),
+    }
+
+
+def _grafico_historico_status_materia(linhas: list[dict]) -> dict:
+    contagem: dict[str, int] = {}
+    for linha in linhas:
+        status_novo = linha["status_novo_texto"] or "Sem status"
+        contagem[status_novo] = contagem.get(status_novo, 0) + 1
+    return {
+        "labels": list(contagem.keys()),
+        "totais": list(contagem.values()),
+    }
+
+
 @router.get("")
 def listar(request: Request, conn: Connection = Depends(get_conn)):
     repo = RelatorioRepository(conn)
@@ -86,6 +108,7 @@ def listar(request: Request, conn: Connection = Depends(get_conn)):
         "setores_editores": repo.setores_editores,
         "funcionarios_detalhes": repo.funcionarios_detalhes,
         "materias_completas": repo.materias_completas,
+        "historico_status_materia": repo.historico_status_materia,
     }
     relatorios = {}
     for nome, consulta in consultas.items():
@@ -96,12 +119,15 @@ def listar(request: Request, conn: Connection = Depends(get_conn)):
     dados_setores, erro_setores = relatorios["setores_editores"]
     dados_funcionarios, erro_funcionarios = relatorios["funcionarios_detalhes"]
     dados_materias, erro_materias = relatorios["materias_completas"]
+    dados_historico, erro_historico = relatorios["historico_status_materia"]
 
     graficos = {
         "resumo_edicoes_jornal": None if erro_resumo else _grafico_resumo_edicoes(dados_resumo),
         "carga_materias_jornalista": None if erro_carga else _grafico_carga_jornalista(dados_carga),
         "setores_editores": None if erro_setores else _grafico_especialidades(dados_setores),
         "funcionarios_detalhes": None if erro_funcionarios else _grafico_cargos(dados_funcionarios),
+        "materias_completas": None if erro_materias else _grafico_status_materias(dados_materias),
+        "historico_status_materia": None if erro_historico else _grafico_historico_status_materia(dados_historico),
     }
 
     indicadores = {
@@ -176,8 +202,9 @@ def exportar_pdf(nome: str, conn: Connection = Depends(get_conn)):
         "setores_editores": repo.setores_editores,
         "funcionarios_detalhes": repo.funcionarios_detalhes,
         "materias_completas": repo.materias_completas,
+        "historico_status_materia": repo.historico_status_materia,
     }
-    
+
     if nome not in consultas:
         raise HTTPException(status_code=404, detail="Relatorio nao encontrado")
         

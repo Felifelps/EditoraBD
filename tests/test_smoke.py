@@ -75,21 +75,24 @@ def test_logout_revoga_acesso():
         assert resp.headers["location"] == "/login"
 
 
-def test_dashboard_de_relatorios_exibe_as_5_views():
+def test_dashboard_de_relatorios_exibe_as_6_views():
     with TestClient(app) as client:
         _logar(client)
         resp = client.get("/relatorios")
         assert resp.status_code == 200
 
-        # as 5 views continuam representadas: 4 em gráfico + tabela, 1 só em tabela
+        # as 6 views representadas, todas com grafico + tabela
         for canvas_id in (
             "graficoResumoEdicoes",
             "graficoCargaJornalista",
             "graficoEspecialidades",
             "graficoCargos",
+            "graficoStatusMaterias",
+            "graficoHistoricoStatus",
         ):
             assert f'id="{canvas_id}"' in resp.text
         assert "Catálogo completo de matérias" in resp.text
+        assert "Histórico de status de matéria" in resp.text
 
         # indicadores (KPIs) calculados a partir dos dados das views
         assert "kpi-grid" in resp.text
