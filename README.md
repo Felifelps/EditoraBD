@@ -118,13 +118,19 @@ tratados como o mesmo mecanismo de migração.
   tuplas nas tabelas principais (ex.: `funcionario`, `edicao`, `materia`) e 15 nas
   secundárias (ex.: `diretor`, `jornalista`, `editor_chefe`, `jornal`, `setor`,
   `editor_especialidade`, `alocacao_jornalista_materia`).
-- `migrations/0003_create_views.sql` — DDL: cria as 5 Views SQL usadas na tela de
+- `migrations/0003_create_views.sql` — DDL: cria 5 das 6 Views SQL usadas na tela de
   Relatórios (ver seção [Views SQL e Relatórios](#views-sql-e-relatórios)).
 - `migrations/0004_add_login_funcionario.sql` — DDL + DML: adiciona a coluna
   `funcionario.senha_hash` e cria o funcionário de teste usado no login (ver seção
   [Login](#login)).
+- `migrations/0005_trigger_historico_status_materia.sql` — DDL: cria a tabela de
+  auditoria `historico_status_materia` e a trigger `trg_historico_status_materia` (ver
+  seção [Trigger](#trigger)).
+- `migrations/0006_view_historico_status_materia.sql` — DDL: cria a 6ª View,
+  `vw_historico_status_materia`, que traduz os códigos de status da tabela de auditoria
+  para texto e junta o título da matéria (usada no relatório de histórico de status).
 
-Esses dois arquivos ficam em `migrations/*.sql` e são aplicados **automaticamente, em
+Esses arquivos ficam em `migrations/*.sql` e são aplicados **automaticamente, em
 ordem, toda vez que a aplicação sobe** — ver `app/db/migrate.py`, chamado no `lifespan`
 de `app/main.py`. Cada arquivo já aplicado é registrado numa única tabela de controle,
 `schema_migrations` (criada pelo próprio `migrate.py` se não existir), guardando o nome
@@ -136,13 +142,14 @@ Ou seja: basta iniciar a app que o schema e os dados já ficam em dia, sem coman
 manual de migração.
 
 Para adicionar uma nova migração (schema ou dados), crie um arquivo novo em
-`migrations/` seguindo o padrão de numeração (`0004_algo.sql`) — ele será aplicado no
+`migrations/` seguindo o padrão de numeração (`0007_algo.sql`) — ele será aplicado no
 próximo start da app.
 
 ## Views SQL e Relatórios
 
 `migrations/0003_create_views.sql` cria 5 Views que unem dados de 3+ tabelas para
-simplificar as consultas usadas nos relatórios:
+simplificar as consultas usadas nos relatórios; `migrations/0006_view_historico_status_materia.sql`
+acrescenta uma 6ª, sobre a tabela de auditoria alimentada pela [Trigger](#trigger):
 
 | View | Tabelas envolvidas | Finalidade |
 |---|---|---|
@@ -151,6 +158,7 @@ simplificar as consultas usadas nos relatórios:
 | `vw_setores_editores` | `setor`, `editor_chefe`, `funcionario`, `editor_especialidade` | Cada setor com o nome do editor-chefe responsável e suas especialidades agregadas. |
 | `vw_funcionarios_detalhes` | `funcionario`, `diretor`, `jornalista`, `editor_chefe` | Todos os funcionários com o cargo (Diretor/Jornalista/Editor-Chefe) resolvido dinamicamente a partir da herança. |
 | `vw_materias_completas` | `materia`, `setor`, `edicao`, `alocacao_jornalista_materia`, `jornalista`, `funcionario` | Catálogo de matérias com setor, edição/jornal, status por extenso e os autores agregados. |
+| `vw_historico_status_materia` | `historico_status_materia`, `materia` | Histórico de mudanças de status de cada matéria (título + status anterior/novo por extenso + timestamp), a partir da tabela de auditoria da trigger. |
 
 Essas Views são consultadas por `app/repositories/relatorios.py` e exibidas na tela
 `GET /relatorios` (`app/routers/relatorios.py` + `app/templates/relatorios/list.html`),
@@ -163,9 +171,8 @@ A tela é um dashboard, não uma lista de tabelas empilhadas:
 
 - **4 indicadores** no topo (Jornais, Edições, Jornalistas, Matérias) — somas/contagens
   calculadas a partir dos próprios dados das Views, sem consulta extra.
-- **4 gráficos** (biblioteca [Chart.js](https://www.chartjs.org/), via CDN — a única
-  adicionada; nenhuma dependência Python nova), um para cada View além do catálogo de
-  matérias:
+- **6 gráficos** (biblioteca [Chart.js](https://www.chartjs.org/), via CDN — a única
+  adicionada; nenhuma dependência Python nova), um para cada View:
   - *Edições por jornal* — ranking em barras horizontais (`vw_resumo_edicoes_jornal`);
     o tooltip de cada barra mostra o diretor e a data da última edição.
   - *Carga de matérias por jornalista* — ranking em barras horizontais **empilhadas**
@@ -179,21 +186,41 @@ A tela é um dashboard, não uma lista de tabelas empilhadas:
     `vw_setores_editores`.
   - *Funcionários por cargo* — gráfico de rosca com a composição
     Diretor/Jornalista/Editor-Chefe/sem cargo, a partir de `vw_funcionarios_detalhes`.
-- Cada gráfico é acompanhado de uma **tabela complementar** com os valores exatos, e o
-  catálogo de matérias (`vw_materias_completas`, a View mais extensa) permanece só como
-  tabela — é a camada de consulta detalhada do dashboard.
+  - *Catálogo completo de matérias* — gráfico da distribuição por status, a partir de
+    `vw_materias_completas` (a View mais extensa, cuja listagem completa fica na tabela
+    ao lado).
+  - *Histórico de status de matéria* — distribuição das transições de status
+    registradas pela trigger, a partir de `vw_historico_status_materia`.
+- Cada gráfico é acompanhado de uma **tabela complementar** com os valores exatos e de
+  botões **Exportar CSV** / **Exportar PDF** (ver seção
+  [Exportação de relatórios](#exportação-de-relatórios)).
 - Cores dos gráficos reaproveitam as mesmas variáveis CSS (`--cor-primaria`,
   `--cor-sucesso`, `--cor-aviso`, `--cor-perigo`, ...) já usadas nos badges de status do
   resto da aplicação, lidas em tempo de execução via `getComputedStyle`.
 
 O layout usa um grid responsivo (`.relatorios-grid` em `app/static/css/app.css`): os
-quatro primeiros relatórios ficam em pares lado a lado (uma coluna só em telas
-menores) e o catálogo de matérias — o mais extenso — ocupa a largura inteira embaixo.
-Cada card tem sua própria área de rolagem vertical (com cabeçalho de tabela fixo) para
+seis relatórios ficam em três linhas de pares lado a lado (uma coluna só em telas
+menores). Cada card tem sua própria área de rolagem vertical (com cabeçalho de tabela fixo) para
 não esticar a página, além do scroll horizontal já existente por tabela. Cada seção
 trata individualmente os estados de carregando (spinner no botão "Atualizar"), erro
 (mensagem amigável, sem stack trace) e sem dados — uma falha ou ausência de dados numa
 View não derruba as demais.
+
+### Exportação de relatórios
+
+Cada um dos 6 relatórios pode ser baixado em dois formatos, pelos botões no cabeçalho
+do card:
+
+| Formato | Rota | Detalhes |
+|---|---|---|
+| CSV | `GET /relatorios/{nome_relatorio}/csv` | Separador `;` e BOM UTF-8, para abrir direto no Excel; datas em `dd/mm/aaaa` e valores monetários formatados. |
+| PDF | `GET /relatorios/{nome}/pdf` | Gerado com `fpdf2` (única dependência Python nova), tabela em paisagem com cabeçalho por coluna. |
+
+Os `nome`s válidos são as chaves das Views: `resumo_edicoes_jornal`,
+`carga_materias_jornalista`, `setores_editores`, `funcionarios_detalhes`,
+`materias_completas` e `historico_status_materia`. Um nome desconhecido responde `404`.
+Ambas as rotas usam a mesma consulta da tela, então o arquivo exportado bate linha a
+linha com a View correspondente.
 
 ## Esquema Conceitual
 
@@ -425,7 +452,7 @@ Testes de integração ponta a ponta (`tests/test_smoke.py`, com `pytest` + o
 `TestClient` do FastAPI) cobrem: login com credenciais válidas/inválidas, bloqueio de
 acesso sem autenticação, logout (e bloqueio de acesso após ele), carregamento das
 páginas principais, CRUD completo de uma entidade, o dashboard de Relatórios exibindo
-as 5 Views (gráficos + tabelas), que os números embutidos nos gráficos batem com uma
+as Views (gráficos + tabelas), que os números embutidos nos gráficos batem com uma
 consulta direta às Views, e o tratamento de erro para uma referência inválida (FK). Não
 usam mocks — rodam contra um Postgres de verdade.
 
