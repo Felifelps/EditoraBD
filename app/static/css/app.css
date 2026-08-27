@@ -93,6 +93,7 @@ section {
    ========================================================= */
 
 .card {
+    border: 1px solid var(--cor-borda);
     border-radius: var(--raio-grande);
     box-shadow: var(--sombra-card);
 }
@@ -418,6 +419,14 @@ input[type="date"] {
 
 .form-card-wrap--largo {
     max-width: 960px;
+}
+
+/* Cards de criar / atualizar / ver um objeto: borda mais firme e sombra elevada,
+   para ficarem visivelmente delimitados como um "card interno" da tela. */
+.form-card,
+.detail-card {
+    border: 1px solid var(--cor-borda);
+    box-shadow: var(--sombra-card-hover);
 }
 
 .form-card .card-body {
