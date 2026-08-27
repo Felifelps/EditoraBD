@@ -310,14 +310,13 @@ constraint `fk_editor_chefe_jornalista`.
 > anterior e ainda descreve `Editor_Chefe` como especialização direta de `Funcionario` —
 > ficou desatualizado após a correção acima. O diagrama Mermaid desta seção reflete o
 > schema atual (`migrations/0001_create_tables.sql`) e deve ser tratado como a fonte da
-> verdade. O `Dicionário de Dados.pdf` já foi regerado a partir das migrations atuais.
+> verdade.
 
 ## Dicionário de Dados
 
 O dicionário de dados completo está no arquivo
 **[`Dicionário de Dados.pdf`](./Dicionário%20de%20Dados.pdf)**, na raiz do repositório.
-Ele foi **regerado a partir das `migrations/*.sql` atuais** (substitui a versão da entrega
-anterior, que estava desatualizada) e cobre:
+Ele cobre:
 
 - as **11 tabelas** do domínio (`funcionario` e os subtipos `diretor` / `jornalista` /
   `editor_chefe`, `editor_especialidade`, `jornal`, `edicao`, `setor`, `materia`,
