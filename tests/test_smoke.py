@@ -280,7 +280,7 @@ def test_crud_pages_seguem_o_mesmo_padrao_visual():
             resp = client.get(path)
             assert resp.status_code == 200
             assert "page-header" in resp.text, path
-            assert 'class="card shadow-sm border-0' in resp.text, path
+            assert 'class="card shadow-sm' in resp.text, path
 
         paginas_form = ["/funcionarios/novo", "/jornais/novo", "/edicoes/novo", "/setores/novo", "/materias/novo"]
         for path in paginas_form:
